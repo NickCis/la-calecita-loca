@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 using std::string;
 using std::cout;
@@ -14,12 +15,18 @@ bool Logger::isInit = false;
 Logger::Mode Logger::mode = Logger::NORMAL;
 string Logger::path = "";
 
-void Logger::log(std::string name, std::string text){
-	Logger::log(name+": "+text);
-}
-
-void Logger::log(std::string text){
+void Logger::log(const string &fmt, ...){
 	Logger::init();
+	char text_c[512];
+
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(text_c, 512, fmt.c_str(), args);
+	va_end(args);
+	text_c[511] = 0;
+
+	string text = text_c;
+
 	switch(Logger::mode){
 		case DEBUG:
 			{
@@ -41,7 +48,7 @@ void Logger::setMode(Mode mode){
 	Logger::mode = mode;
 }
 
-void Logger::setPath(std::string path){
+void Logger::setPath(const string &path){
 	Logger::init();
 	Logger::path = path;
 }
@@ -76,7 +83,7 @@ void Logger::compileInfo(){
 	Logger::log("git: '" GIT_REV "' date: '" TIME_COMPILED "'");
 }
 
-void Logger::compileInfo(string name){
+void Logger::compileInfo(const string &name){
 	Logger::init();
-	Logger::log(name, "git: '" GIT_REV "' date: '" TIME_COMPILED "'");
+	Logger::log("%s: git: '" GIT_REV "' date: '" TIME_COMPILED "'", name.c_str());
 }
