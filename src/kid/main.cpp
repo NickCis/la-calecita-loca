@@ -15,7 +15,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	ticket.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 	ticket.cerrar();
 
-	Logger::log("%s: espero SIGUSR1 (%d)", "KID", SIGUSR1);
+	Logger::log("KID: compro entrada");
 
 	/*int sig =*/ Signal::waitSignal(SIGUSR1);
 
@@ -30,7 +30,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	queue.escribir(static_cast<const void*> (&position), sizeof(KidPosition));
 	queue.cerrar();
 
-	Logger::log("%s: espero SIGUSR1 (%d)", "KID", SIGUSR1);
+	Logger::log("KID: Espero a la calecita");
 
 	/*int sig =*/ Signal::waitSignal(SIGUSR1);
 

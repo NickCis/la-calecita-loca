@@ -5,7 +5,7 @@ RM=rm
 MKDIR=mkdir
 
 BIN_PATH=./bin/
-BIN=kid seller administrator
+BIN=kid seller administrator calecita
 BINS=$(addprefix $(BIN_PATH)/, $(BIN))
 OBJECTS=$(foreach b, $(BIN), $(SRC_PATH)/$(b)/main.o)
 

@@ -1,6 +1,5 @@
 #include "signal_wait.h"
 
-#include <signal.h>
 #include <stdlib.h>
 
 int Signal::waitSignal(int signal){

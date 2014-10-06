@@ -42,8 +42,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		kill(kidPid, SIGUSR1);
 	}
 
-	Logger::log("SELLER: bytesLeidos %d", bytesLeidos);
-
 	tickets.cerrar();
 
 	Logger::log("SELLER: END");
