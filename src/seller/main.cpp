@@ -3,16 +3,15 @@
 #include "../util/defines.h"
 #include "../util/lock_file.h"
 #include "../util/memoria_compartida2.h"
+#include "../util/env_config.h"
 
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
 
-//XXX: parametrizar
-#define TICKET_COST 5
-
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::compileInfo("SELLER");
+	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST);
 
 	FifoLectura tickets(SELLER_FIFO);
 	tickets.abrir(true);
@@ -35,7 +34,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		
 		Logger::log("%s pid leido: %d", "SELLER", kidPid);
 		lock.tomarLock();
-		recaudacion += TICKET_COST;
+		recaudacion += ticket_cost;
 		box.escribir(recaudacion);
 		lock.liberarLock();
 

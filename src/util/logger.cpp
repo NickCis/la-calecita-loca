@@ -1,4 +1,6 @@
 #include "logger.h"
+#include "defines.h"
+#include "env_config.h"
 
 #include <iostream>
 #include <fstream>
@@ -58,23 +60,12 @@ void Logger::init(){
 		return;
 
 	Logger::mode = NORMAL;
-	const char *mode_c = getenv(ENVIROMENT_MODE);
-	if(mode_c){
-		string mode = mode_c;
-		if(mode == "DEBUG"){
-			Logger::mode = DEBUG;
-		}
+	string mode = Config::getStr(ENVIROMENT_MODE, "NORMAL");
+	if(mode == "DEBUG"){
+		Logger::mode = DEBUG;
 	}
 
-	Logger::path = "./debug.log";
-	const char *path_c = getenv(ENVIROMENT_PATH);
-	if(path_c){
-		string path = path_c;
-		if(!path_c || path == ""){
-			Logger::path = path;
-		}
-	}
-
+	Logger::path = Config::getStr(ENVIROMENT_PATH, DEFAULT_LOG_FILE);
 	Logger::isInit = true;
 }
 

@@ -3,9 +3,6 @@
 
 #include <string>
 
-#define ENVIROMENT_MODE "CALECITA_MODE"
-#define ENVIROMENT_PATH "CALECITA_PATH"
-
 #ifndef GIT_REV
 	#define GIT_REV "XXXX"
 	#warning "No se seteo GIT_REV"
