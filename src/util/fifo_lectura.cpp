@@ -7,7 +7,10 @@ FifoLectura::~FifoLectura() {
 }
 
 void FifoLectura::abrir() {
-	fd = open ( nombre.c_str(),O_RDONLY );
+	this->abrir(false);
+}
+void FifoLectura::abrir(bool rw) {
+	fd = open ( nombre.c_str(), rw ? O_RDWR : O_RDONLY );
 }
 
 ssize_t FifoLectura::leer(void* buffer,const ssize_t buffsize) const {

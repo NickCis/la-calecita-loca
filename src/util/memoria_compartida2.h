@@ -28,6 +28,7 @@ public:
 	MemoriaCompartida2<T>& operator= ( const MemoriaCompartida2& origen );
 	void escribir ( const T& dato );
 	T leer () const;
+	void leer (T* ptr) const;
 };
 
 template <class T> MemoriaCompartida2<T>::MemoriaCompartida2 ():shmId(0),ptrDatos(NULL) {
@@ -139,6 +140,10 @@ template <class T> void MemoriaCompartida2<T>::escribir ( const T& dato ) {
 
 template <class T> T MemoriaCompartida2<T>::leer() const {
 	return *(this->ptrDatos);
+}
+
+template <class T> void MemoriaCompartida2<T>::leer (T* ptr) const {
+	memcpy(ptr, this->ptrDatos, sizeof(T));
 }
 
 template <class T> int MemoriaCompartida2<T> :: cantidadProcesosAdosados () const {

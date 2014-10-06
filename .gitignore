@@ -34,5 +34,6 @@ bin/*
 # vim files
 *.sw*
 
-# log
+# misc
 *.log
+money.box
