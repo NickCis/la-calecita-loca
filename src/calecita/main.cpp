@@ -17,7 +17,8 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	pid_t myPid = getpid();
 
 	int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
-		t_vuelta = Config::getInt(ENVIROMENT_T_VUELTA, DEFAULT_TIEMPO_VUELTA);
+		t_vuelta = Config::getInt(ENVIROMENT_T_VUELTA, DEFAULT_TIEMPO_VUELTA),
+		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
 	Logger::log("CALECITA: cantidad de asientos: %d tiempo de vuelta: %d", cant_asientos, t_vuelta);
 
@@ -44,10 +45,9 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 		kids.push_back(kid);
 
-		if(++cantidad >= cant_asientos){
+		if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
 			exitLock.tomarLock();
 
-			cantidad = 0;
 			Logger::log("CALECITA: ya estan todos los chicos. Limpio calecita.");
 			calecita.clear();
 
@@ -67,7 +67,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 			Logger::log("CALECITA: Espero que entren todos los chicos");
 			calecita.liberarLock();
-			calecita.esperarEntradaChicos(cant_asientos);
+			calecita.esperarEntradaChicos(cantidad);
 
 			//calecita.tomarLock();
 			Logger::log("CALECITA: Inicia la vuelta s: %d", t_vuelta);
@@ -78,6 +78,10 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 			exitLock.liberarLock();
 			calecita.liberarLock();
+			cant_chicos -= cantidad;
+			if(cant_chicos == 0)
+				break;
+			cantidad = 0;
 		}
 	}
 
