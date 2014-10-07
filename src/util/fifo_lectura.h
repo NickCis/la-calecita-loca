@@ -5,7 +5,7 @@
 
 class FifoLectura : public Fifo {
 public:
-	FifoLectura(const std::string nombre);
+	FifoLectura(const std::string nombre, bool erase = false);
 	~FifoLectura();
 
 	void abrir();

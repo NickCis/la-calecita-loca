@@ -1,6 +1,6 @@
 #include "fifo_lectura.h"
 
-FifoLectura::FifoLectura(const std::string nombre) : Fifo(nombre) {
+FifoLectura::FifoLectura(const std::string nombre, bool erase) : Fifo(nombre, erase) {
 }
 
 FifoLectura::~FifoLectura() {

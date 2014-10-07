@@ -1,17 +1,19 @@
 #include "logger.h"
 #include "defines.h"
 #include "env_config.h"
+#include "lock_file.h"
 
 #include <iostream>
-#include <fstream>
+#include <sstream>
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 using std::string;
 using std::cout;
 using std::endl;
-using std::ofstream;
+using std::stringstream;
 
 bool Logger::isInit = false;
 Logger::Mode Logger::mode = Logger::NORMAL;
@@ -32,10 +34,13 @@ void Logger::log(const string &fmt, ...){
 	switch(Logger::mode){
 		case DEBUG:
 			{
-				ofstream logfile;
-				logfile.open(Logger::path.c_str(), ofstream::out | ofstream::app );
-				logfile << text << endl;
-				logfile.close();
+				stringstream ss;
+				ss << "[" << getpid() << "] " << text << endl;
+				const char *txt = ss.str().c_str();
+				LockFile file(Logger::path.c_str());
+				file.tomarLock();
+				file.escribir(txt, strlen(txt));
+				file.liberarLock();
 			}
 			break;
 		case NORMAL:

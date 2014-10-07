@@ -3,9 +3,15 @@
 #include <unistd.h>
 
 #define SELLER_FIFO "/tmp/seller_fifo"
-#define MONEY_BOX "money.box"
+#define MONEY_BOX "/tmp/money.box"
 #define MONEY_BOX_CHAR 'A'
 #define QUEUE_FIFO "/tmp/queue_fifo"
+#define KID_FIFO "/tmp/kid_fifo_"
+#define POSICIONES_CALECITA "/tmp/calecita.pos"
+#define POSICIONES_CALECITA_CHAR 'A'
+#define DENTRO_CALECITA_FIFO "/tmp/calecita_dentro"
+
+#define SALIDA_LOCK "/tmp/salida.lock"
 
 #define DEFAULT_TICKET_COST 5
 #define DEFAULT_CANT_ASIENTOS 5
@@ -17,10 +23,5 @@
 #define ENVIROMENT_T_VUELTA "CALECITA_T_VUELTA"
 #define ENVIROMENT_MODE "CALECITA_MODE"
 #define ENVIROMENT_PATH "CALECITA_PATH"
-
-typedef struct {
-	pid_t pid;
-	int pos;
-} KidPosition;
 
 #endif

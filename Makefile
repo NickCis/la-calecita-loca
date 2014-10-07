@@ -19,6 +19,8 @@ LDFLAGS=
 
 .PHONY: all
 
+.PRECIOUS: %.o
+
 all: $(BIN_PATH) $(BINS)
 
 $(BIN_PATH):
