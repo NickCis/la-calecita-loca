@@ -6,6 +6,9 @@
 #include "../util/calecita.h"
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <vector>
 #include <sstream>
 
@@ -63,7 +66,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				chico.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 				chico.cerrar();
 			}
-			kids.clear();
 
 			Logger::log("CALECITA: Espero que entren todos los chicos");
 			calecita.liberarLock();
@@ -76,12 +78,25 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 			Logger::log("CALECITA: fin vuelta");
 
+			Logger::log("CALECITA: Espero a que salgan los chicos");
+
 			exitLock.liberarLock();
-			calecita.liberarLock();
+
+			for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
+				pid_t kidPid = (*it);
+				while(0 < waitpid(kidPid, NULL, 0));
+
+				Logger::log("CALECITA: Chico %d ya esta afuera", kidPid);
+			}
+
+			Logger::log("CALECITA: Salieron todos los chicos");
+
 			cant_chicos -= cantidad;
 			if(cant_chicos == 0)
 				break;
 			cantidad = 0;
+			kids.clear();
+			calecita.liberarLock();
 		}
 	}
 

@@ -14,7 +14,8 @@ using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::compileInfo("SELLER");
-	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST);
+	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
+		chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
 	FifoLectura tickets(SELLER_FIFO);
 	tickets.abrir(true);
@@ -31,7 +32,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	box.escribir(recaudacion);
 	lock.liberarLock();
 
-	for(;;){
+	for(int i=0;i<chicos;i++){
 		bytesLeidos = tickets.leer(static_cast<void*> (&kidPid), sizeof(pid_t));
 		if(bytesLeidos != sizeof(pid_t)){
 			continue;
