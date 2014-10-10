@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 
 using std::string;
 using std::cout;
@@ -22,6 +23,7 @@ string Logger::path = "";
 void Logger::log(const string &fmt, ...){
 	Logger::init();
 	char text_c[512];
+	char time_text[512];
 
 	va_list args;
 	va_start(args, fmt);
@@ -34,11 +36,13 @@ void Logger::log(const string &fmt, ...){
 	switch(Logger::mode){
 		case DEBUG:
 			{
-				stringstream ss;
-				ss << "[" << getpid() << "] " << text << endl;
-				const char *txt = ss.str().c_str();
 				LockFile file(Logger::path.c_str());
 				file.tomarLock();
+				time_t t = time(NULL);
+				strftime(time_text, 512, "%T", localtime(&t));
+				stringstream ss;
+				ss << time_text << " [" << getpid() << "] " << text << endl;
+				const char *txt = ss.str().c_str();
 				file.escribir(txt, strlen(txt));
 				file.liberarLock();
 			}
@@ -76,7 +80,7 @@ void Logger::init(){
 
 void Logger::compileInfo(){
 	Logger::init();
-	Logger::log("git: '" GIT_REV "' date: '" TIME_COMPILED "'");
+	Logger::log("git: '" GIT_REV "' compile date: '" TIME_COMPILED "'");
 }
 
 void Logger::compileInfo(const string &name){

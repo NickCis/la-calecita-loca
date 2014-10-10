@@ -19,8 +19,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	int posicionDeseada = 3;
 
-	Logger::log("%s my pid es %d",  "KID", myPid);
-
 	FifoEscritura ticket(SELLER_FIFO);
 	ticket.abrir();
 	ticket.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
@@ -38,7 +36,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		return -1;
 	}
 
-	Logger::log("KID: Hago la fila");
+	Logger::log("KID: Hago la fila para la calecita");
 
 	FifoEscritura queue(QUEUE_FIFO);
 	queue.abrir();
@@ -49,7 +47,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
 	if(bytesLeidos != sizeof(pid_t)){
-		Logger::log("KID: error haciendo la fila");
+		Logger::log("KID: error esperando a la calecita");
 		return -1;
 	}
 
@@ -61,6 +59,9 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	Logger::log("KID: Entre a la calecita y ocupe la posicion %d", posicionObtenida);
 	calecita.liberarLock();
 
+	LockFile imOut(KIDS_OUT_LOCK);
+	imOut.tomarLock(false);
+
 	LockFile exitLock(SALIDA_LOCK);
 	exitLock.tomarLock();
 
@@ -71,5 +72,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	kidIn.eliminar();
 
 	Logger::log("KID: End");
+
+	imOut.liberarLock();
 	return 0;
 }

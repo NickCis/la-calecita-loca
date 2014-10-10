@@ -23,7 +23,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		t_vuelta = Config::getInt(ENVIROMENT_T_VUELTA, DEFAULT_TIEMPO_VUELTA),
 		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-	Logger::log("CALECITA: cantidad de asientos: %d tiempo de vuelta: %d", cant_asientos, t_vuelta);
+	Logger::log("CALECITA: cantidad de asientos: %d tiempo de vuelta: %d cantidad de chicos: %d", cant_asientos, t_vuelta, cant_chicos);
 
 	FifoLectura fila(QUEUE_FIFO);
 	fila.abrir(true);
@@ -37,6 +37,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	Calecita calecita;
 
 	LockFile exitLock(SALIDA_LOCK);
+	LockFile kidsOut(KIDS_OUT_LOCK);
 
 	for(;;){
 		bytesLeidos = fila.leer(static_cast<void*> (&kid), sizeof(pid_t));
@@ -71,25 +72,17 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 			calecita.liberarLock();
 			calecita.esperarEntradaChicos(cantidad);
 
-			//calecita.tomarLock();
 			Logger::log("CALECITA: Inicia la vuelta s: %d", t_vuelta);
 
 			sleep(t_vuelta);
 
-			Logger::log("CALECITA: fin vuelta");
-
-			Logger::log("CALECITA: Espero a que salgan los chicos");
+			Logger::log("CALECITA: Termino la vuelta. Espero a que salgan los chicos");
 
 			exitLock.liberarLock();
 
-			for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
-				pid_t kidPid = (*it);
-				while(0 < waitpid(kidPid, NULL, 0));
-
-				Logger::log("CALECITA: Chico %d ya esta afuera", kidPid);
-			}
-
+			kidsOut.tomarLock();
 			Logger::log("CALECITA: Salieron todos los chicos");
+			kidsOut.liberarLock();
 
 			cant_chicos -= cantidad;
 			if(cant_chicos == 0)
@@ -103,6 +96,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	fila.cerrar();
 	fila.eliminar();
 
-	Logger::log("CALECITA: END");
+	Logger::log("CALECITA: Ya todos los chicos se divirtieron en mi. Salgo.");
 	return 0;
 }

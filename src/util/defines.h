@@ -12,6 +12,7 @@
 #define DENTRO_CALECITA_FIFO "/tmp/calecita_dentro"
 
 #define SALIDA_LOCK "/tmp/salida.lock"
+#define KIDS_OUT_LOCK "/tmp/kids_out.lock"
 
 #define DEFAULT_TICKET_COST 5
 #define DEFAULT_CANT_ASIENTOS 5

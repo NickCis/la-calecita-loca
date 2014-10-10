@@ -17,6 +17,8 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
 		chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
+	Logger::log("SELLER: costo de entrada: %dcantidad de chicos: %d", ticket_cost, chicos);
+
 	FifoLectura tickets(SELLER_FIFO);
 	tickets.abrir(true);
 	ssize_t bytesLeidos;
@@ -59,6 +61,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	tickets.cerrar();
 	tickets.eliminar();
 
-	Logger::log("SELLER: END");
+	Logger::log("SELLER: Vendi todas las entradas. Salgo.");
 	return 0;
 }
