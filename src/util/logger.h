@@ -49,8 +49,16 @@ class Logger {
 		static void compileInfo(const std::string &name);
 
 	private:
+		/** Variable que se utiliza para saber si ya se inicializo
+		 */
 		static bool isInit;
+
+		/** Path del archivo de salida en modo debug
+		 */
 		static std::string path;
+
+		/** Modo en que se encuentra configurado
+		 */
 		static Mode mode;
 		Logger(){}
 		~Logger(){}

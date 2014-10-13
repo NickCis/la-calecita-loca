@@ -8,10 +8,24 @@
 
 class Calesita {
 	private:
+		/** Memoria compartida usada para las posiciones de la calesita
+		 */
 		MemoriaCompartida3<pid_t> *shm;
+
+		/** Tama~no de la memoria compartida
+		 */
 		size_t size;
+
+		/** Cantidad de posiciones en la calesita
+		 */
 		int cantidadPosiciones;
+
+		/** Lock para la shm
+		 */
 		LockFile lock;
+
+		/** Posiciones de la calesita (Leidas de la shm)
+		 */
 		pid_t *posiciones;
 
 	public:

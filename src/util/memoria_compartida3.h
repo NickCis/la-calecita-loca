@@ -9,25 +9,65 @@
 #include <iostream>
 #include <errno.h>
 
+
+/** Clase para manejar memoria compartida.
+ * Permite memorias con largos dinamicos, sin que dependan obligatoriamente del tama~no de un tipo de dato.
+ */
 template <class T> class MemoriaCompartida3 {
 
 private:
+	/** id de la shm
+	 */
 	int shmId;
+	/** Puntero al mapeo de la shm
+	 */
 	T* ptrDatos;
+	/** Tama~no de la shm
+	 */
 	size_t size;
 
+	/** Metodo que devuelve la cantidad de procesos adosados a la memoria compartida.
+	 * @return cantidad de procesos adosados
+	 */
 	int	cantidadProcesosAdosados() const;
 
 public:
+
+	/** Constructor.
+	 * @param s: tama~no de la shm
+	 */
 	MemoriaCompartida3 (size_t s);
+
+	/** Crea la memoria compartida.
+	 * @param archivo: path del archivo a utilizar
+	 * @param letra: letra a utilizar
+	 * @return ERROR_FTOK si hubo error en la creacion de la clave, ERROR_SHMGET si hubo error en shmget, ERROR_SHMAT si hubo error en shmat o SHM_OK si todo salio bien.
+	 */
 	void crear ( const std::string& archivo,const char letra );
+
+	/** Liberar se desadosa de la memoria compartida.
+	 */
 	void liberar ();
 
+	/** Constructor que ejecuta metodo crear tmb, levanta excepcion si hay error.
+	 * @param archivo: path del archivo a utilizar
+	 * @param letra: letra a utilizar
+	 * @param s: tama~no de la shm
+	 * @see MemoriaCompartida2::crear
+	 */
 	MemoriaCompartida3 ( const std::string& archivo, const char letra, size_t s );
 	MemoriaCompartida3 ( const MemoriaCompartida3& origen );
 	~MemoriaCompartida3 ();
 	MemoriaCompartida3<T>& operator= ( const MemoriaCompartida3& origen );
+
+	/** Escribe en la memoria compartida
+	 * @param dato: puntero al dato a escribir
+	 */
 	void escribir ( const T* ptr );
+
+	/** Lee de la memoria compartida y lo escribe en ptr
+	 * @param ptr: puntero en donde escribir lo leido(debe tener la memoria reservada).
+	 */
 	void leer (T* ptr) const;
 };
 

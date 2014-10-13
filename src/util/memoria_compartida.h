@@ -12,20 +12,46 @@
 #include <string>
 
 
+/** Clase para manejar memoria compartida
+ */
 template <class T> class MemoriaCompartida {
 
 private:
+	/** id de la shm
+	 */
 	int shmId;
-	T*	ptrDatos;
+	/** Puntero al mapeo de la shm
+	 */
+	T* ptrDatos;
 
+	/** Metodo que devuelve la cantidad de procesos adosados a la memoria compartida.
+	 * @return cantidad de procesos adosados
+	 */
 	int cantidadProcesosAdosados () const;
 
 public:
 	MemoriaCompartida ();
 	~MemoriaCompartida ();
+
+	/** Crea la memoria compartida.
+	 * @param archivo: path del archivo a utilizar
+	 * @param letra: letra a utilizar
+	 * @return ERROR_FTOK si hubo error en la creacion de la clave, ERROR_SHMGET si hubo error en shmget, ERROR_SHMAT si hubo error en shmat o SHM_OK si todo salio bien.
+	 */
 	int crear ( const std::string& archivo,const char letra );
+
+	/** Liberar se desadosa de la memoria compartida.
+	 */
 	void liberar ();
+
+	/** Escribe en la memoria compartida
+	 * @param dato: referencia al dato a escribir
+	 */
 	void escribir ( const T& dato );
+
+	/** Lee de la memoria compartida.
+	 * @return dato leido
+	 */
 	T leer () const;
 
 };

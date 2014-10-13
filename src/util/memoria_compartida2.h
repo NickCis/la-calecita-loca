@@ -9,25 +9,60 @@
 #include <iostream>
 #include <errno.h>
 
+/** Clase para manejar memoria compartida
+ */
 template <class T> class MemoriaCompartida2 {
 
 private:
+	/** id de la shm
+	 */
 	int	shmId;
-	T*	ptrDatos;
+	/** Puntero al mapeo de la shm
+	 */
+	T* ptrDatos;
 
+	/** Metodo que devuelve la cantidad de procesos adosados a la memoria compartida.
+	 * @return cantidad de procesos adosados
+	 */
 	int	cantidadProcesosAdosados() const;
 
 public:
 	MemoriaCompartida2 ();
+
+	/** Crea la memoria compartida.
+	 * @param archivo: path del archivo a utilizar
+	 * @param letra: letra a utilizar
+	 * @return ERROR_FTOK si hubo error en la creacion de la clave, ERROR_SHMGET si hubo error en shmget, ERROR_SHMAT si hubo error en shmat o SHM_OK si todo salio bien.
+	 */
 	void crear ( const std::string& archivo,const char letra );
+
+	/** Liberar se desadosa de la memoria compartida.
+	 */
 	void liberar ();
 
+	/** Constructor que ejecuta metodo crear tmb, levanta excepcion si hay error.
+	 * @param archivo: path del archivo a utilizar
+	 * @param letra: letra a utilizar
+	 * @see MemoriaCompartida2::crear
+	 */
 	MemoriaCompartida2 ( const std::string& archivo,const char letra );
 	MemoriaCompartida2 ( const MemoriaCompartida2& origen );
 	~MemoriaCompartida2 ();
 	MemoriaCompartida2<T>& operator= ( const MemoriaCompartida2& origen );
+
+	/** Escribe en la memoria compartida
+	 * @param dato: referencia al dato a escribir
+	 */
 	void escribir ( const T& dato );
+
+	/** Lee de la memoria compartida.
+	 * @return dato leido
+	 */
 	T leer () const;
+
+	/** Lee de la memoria compartida y lo escribe en ptr
+	 * @param ptr: puntero en donde escribir (debe tener la memoria reservada).
+	 */
 	void leer (T* ptr) const;
 };
 
