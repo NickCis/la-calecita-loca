@@ -37,3 +37,4 @@ bin/*
 # misc
 *.log
 money.box
+doc

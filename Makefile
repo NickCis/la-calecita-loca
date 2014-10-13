@@ -39,3 +39,5 @@ clean:
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o "$@" "$<"
 
+doc:
+	doxygen Doxyfile
