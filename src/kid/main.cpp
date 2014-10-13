@@ -2,7 +2,7 @@
 #include "../util/fifo_escritura.h"
 #include "../util/fifo_lectura.h"
 #include "../util/defines.h"
-#include "../util/calecita.h"
+#include "../util/calesita.h"
 #include <unistd.h>
 
 #include <sstream>
@@ -36,28 +36,28 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		return -1;
 	}
 
-	Logger::log("KID: Hago la fila para la calecita");
+	Logger::log("KID: Hago la fila para la calesita");
 
 	FifoEscritura queue(QUEUE_FIFO);
 	queue.abrir();
 	queue.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 	queue.cerrar();
 
-	Logger::log("KID: Espero a la calecita");
+	Logger::log("KID: Espero a la calesita");
 
 	bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
 	if(bytesLeidos != sizeof(pid_t)){
-		Logger::log("KID: error esperando a la calecita");
+		Logger::log("KID: error esperando a la calesita");
 		return -1;
 	}
 
-	Logger::log("KID: Entro a la calecita y quiero lugar %d", posicionDeseada);
+	Logger::log("KID: Entro a la calesita y quiero lugar %d", posicionDeseada);
 
-	Calecita calecita;
-	calecita.tomarLock();
-	int posicionObtenida = calecita.ocuparPosicion(posicionDeseada);
-	Logger::log("KID: Entre a la calecita y ocupe la posicion %d", posicionObtenida);
-	calecita.liberarLock();
+	Calesita calesita;
+	calesita.tomarLock();
+	int posicionObtenida = calesita.ocuparPosicion(posicionDeseada);
+	Logger::log("KID: Entre a la calesita y ocupe la posicion %d", posicionObtenida);
+	calesita.liberarLock();
 
 	LockFile imOut(KIDS_OUT_LOCK);
 	imOut.tomarLock(false);

@@ -3,7 +3,7 @@
 #include "../util/fifo_escritura.h"
 #include "../util/defines.h"
 #include "../util/env_config.h"
-#include "../util/calecita.h"
+#include "../util/calesita.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -16,14 +16,14 @@ using std::vector;
 using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
-	Logger::compileInfo("CALECITA");
+	Logger::compileInfo("CALESITA");
 	pid_t myPid = getpid();
 
 	int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
 		t_vuelta = Config::getInt(ENVIROMENT_T_VUELTA, DEFAULT_TIEMPO_VUELTA),
 		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-	Logger::log("CALECITA: cantidad de asientos: %d tiempo de vuelta: %d cantidad de chicos: %d", cant_asientos, t_vuelta, cant_chicos);
+	Logger::log("CALESITA: cantidad de asientos: %d tiempo de vuelta: %d cantidad de chicos: %d", cant_asientos, t_vuelta, cant_chicos);
 
 	FifoLectura fila(QUEUE_FIFO);
 	fila.abrir(true);
@@ -34,7 +34,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	pid_t kid;
 	vector<pid_t> kids;
 
-	Calecita calecita;
+	Calesita calesita;
 
 	LockFile exitLock(SALIDA_LOCK);
 	LockFile kidsOut(KIDS_OUT_LOCK);
@@ -45,18 +45,18 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 			continue;
 		}
 		
-		Logger::log("CALECITA: chico hace la cola %d", kid);
+		Logger::log("CALESITA: chico hace la cola %d", kid);
 
 		kids.push_back(kid);
 
 		if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
 			exitLock.tomarLock();
 
-			Logger::log("CALECITA: ya estan todos los chicos. Limpio calecita.");
-			calecita.clear();
+			Logger::log("CALESITA: ya estan todos los chicos. Limpio calesita.");
+			calesita.clear();
 
-			calecita.tomarLock();
-			Logger::log("CALECITA: Dejo entrar a los chicos");
+			calesita.tomarLock();
+			Logger::log("CALESITA: Dejo entrar a los chicos");
 
 			for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
 				pid_t kidPid = (*it);
@@ -68,20 +68,20 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				chico.cerrar();
 			}
 
-			Logger::log("CALECITA: Espero que entren todos los chicos");
-			calecita.liberarLock();
-			calecita.esperarEntradaChicos(cantidad);
+			Logger::log("CALESITA: Espero que entren todos los chicos");
+			calesita.liberarLock();
+			calesita.esperarEntradaChicos(cantidad);
 
-			Logger::log("CALECITA: Inicia la vuelta s: %d", t_vuelta);
+			Logger::log("CALESITA: Inicia la vuelta s: %d", t_vuelta);
 
 			sleep(t_vuelta);
 
-			Logger::log("CALECITA: Termino la vuelta. Espero a que salgan los chicos");
+			Logger::log("CALESITA: Termino la vuelta. Espero a que salgan los chicos");
 
 			exitLock.liberarLock();
 
 			kidsOut.tomarLock();
-			Logger::log("CALECITA: Salieron todos los chicos");
+			Logger::log("CALESITA: Salieron todos los chicos");
 			kidsOut.liberarLock();
 
 			cant_chicos -= cantidad;
@@ -89,13 +89,13 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				break;
 			cantidad = 0;
 			kids.clear();
-			calecita.liberarLock();
+			calesita.liberarLock();
 		}
 	}
 
 	fila.cerrar();
 	fila.eliminar();
 
-	Logger::log("CALECITA: Ya todos los chicos se divirtieron en mi. Salgo.");
+	Logger::log("CALESITA: Ya todos los chicos se divirtieron en mi. Salgo.");
 	return 0;
 }

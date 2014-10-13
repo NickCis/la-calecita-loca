@@ -64,7 +64,7 @@ int runExe(string exe, int &exit){
 }
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
-	cout << "Lanzador de simulacion de calecita" << endl;
+	cout << "Lanzador de simulacion de calesita" << endl;
 	string mode = Config::getStr(ENVIROMENT_MODE, "NORMAL"),
 		   path = Config::getStr(ENVIROMENT_PATH, DEFAULT_LOG_FILE);
 	int ticketCost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
@@ -97,7 +97,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		return exit
 
 	EXEC_PROGRAM("seller");
-	EXEC_PROGRAM("calecita");
+	EXEC_PROGRAM("calesita");
 
 	for(int i=0; i < chicos ; i++){
 		EXEC_PROGRAM("kid");

@@ -1,30 +1,30 @@
-#include "calecita.h"
+#include "calesita.h"
 #include "../util/defines.h"
 #include "../util/env_config.h"
 #include "../util/fifo_lectura.h"
 #include "../util/fifo_escritura.h"
 
-Calecita::Calecita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALECITA), posiciones(NULL) {
+Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL) {
 	this->cantidadPosiciones = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS);
 	this->size = sizeof(pid_t) * this->cantidadPosiciones;
-	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALECITA, POSICIONES_CALECITA_CHAR, this->size);
+	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALESITA, POSICIONES_CALESITA_CHAR, this->size);
 	this->posiciones = new pid_t[this->cantidadPosiciones];
 }
 
-Calecita::~Calecita() {
+Calesita::~Calesita() {
 	delete this->shm;
 	delete[] this->posiciones;
 }
 
-int Calecita::tomarLock(){
+int Calesita::tomarLock(){
 	return this->lock.tomarLock();
 }
 
-int Calecita::liberarLock(){
+int Calesita::liberarLock(){
 	return this->lock.liberarLock();
 }
 
-int Calecita::ocuparPosicion(int pos){
+int Calesita::ocuparPosicion(int pos){
 	pid_t myPid = getpid();
 	pos = pos % this->cantidadPosiciones;
 	this->shm->leer(this->posiciones);
@@ -42,23 +42,23 @@ int Calecita::ocuparPosicion(int pos){
 	this->shm->escribir(this->posiciones);
 
 
-	FifoEscritura dentroCalecita(DENTRO_CALECITA_FIFO);
-	dentroCalecita.abrir();
-	dentroCalecita.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
-	dentroCalecita.cerrar();
+	FifoEscritura dentroCalesita(DENTRO_CALESITA_FIFO);
+	dentroCalesita.abrir();
+	dentroCalesita.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
+	dentroCalesita.cerrar();
 
 	return pos;
 }
 
-void Calecita::clear(){
+void Calesita::clear(){
 	this->tomarLock();
 	memset(this->posiciones, 0, this->size);
 	this->shm->escribir(this->posiciones);
 	this->liberarLock();
 }
 
-void Calecita::esperarEntradaChicos(int cantChicos){
-	FifoLectura dentro(DENTRO_CALECITA_FIFO);
+void Calesita::esperarEntradaChicos(int cantChicos){
+	FifoLectura dentro(DENTRO_CALESITA_FIFO);
 	pid_t kid;
 	dentro.abrir(true);
 	while(cantChicos-- > 0 ){

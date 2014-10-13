@@ -1,12 +1,12 @@
-#ifndef __CALECITA_H__
-#define __CALECITA_H__
+#ifndef __CALESITA_H__
+#define __CALESITA_H__
 
 #include <unistd.h>
 
 #include "lock_file.h"
 #include "memoria_compartida3.h"
 
-class Calecita {
+class Calesita {
 	private:
 		MemoriaCompartida3<pid_t> *shm;
 		size_t size;
@@ -15,15 +15,15 @@ class Calecita {
 		pid_t *posiciones;
 
 	public:
-		Calecita();
-		~Calecita();
+		Calesita();
+		~Calesita();
 
-		/** Toma lock del lock de archivo de la shm asignada a la memoria compartida de la calecita
+		/** Toma lock del lock de archivo de la shm asignada a la memoria compartida de la calesita
 		 * @return salida de LockFile::tomarLock()
 		 */
 		int tomarLock();
 
-		/** Libera lock del lock de archivo de la shm asignada a la memoria compartida de la calecita
+		/** Libera lock del lock de archivo de la shm asignada a la memoria compartida de la calesita
 		 * @return salida de LockFile::liberarLock()
 		 */
 		int liberarLock();
