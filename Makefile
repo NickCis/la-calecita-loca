@@ -35,6 +35,7 @@ $(BIN_PATH)/%: $(UTIL) $(OBJECTS)
 clean:
 	- $(RM) $(SRC_PATH)/*.o $(SRC_PATH)/*/*.o
 	- $(RM) -r $(BIN_PATH)
+	- $(RM) -r doc
 
 %.o: %.cpp
 	$(CC) -c $(CFLAGS) -o "$@" "$<"
