@@ -1,0 +1,3 @@
+* Fifo no rw
+* shm de vendedor tiene que vivir en toda simulacion
+* chicos no tienen qe bloquear toda la shm de la calesita para ocupar su lugar

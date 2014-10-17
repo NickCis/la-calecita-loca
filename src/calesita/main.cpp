@@ -16,14 +16,14 @@ using std::vector;
 using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
-	Logger::compileInfo("CALESITA");
+	Logger::setName(argv[0]);
 	pid_t myPid = getpid();
 
 	int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
-		t_vuelta = Config::getInt(ENVIROMENT_T_VUELTA, DEFAULT_TIEMPO_VUELTA),
 		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-	Logger::log("CALESITA: cantidad de asientos: %d tiempo de vuelta: %d cantidad de chicos: %d", cant_asientos, t_vuelta, cant_chicos);
+
+	Logger::log("Inicio: cantidad de asientos: %d cantidad de chicos: %d", cant_asientos, cant_chicos);
 
 	FifoLectura fila(QUEUE_FIFO);
 	fila.abrir(true);
@@ -34,7 +34,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	pid_t kid;
 	vector<pid_t> kids;
 
-	Calesita calesita;
+	CalesitaControlador calesita;
 
 	LockFile exitLock(SALIDA_LOCK);
 	LockFile kidsOut(KIDS_OUT_LOCK);
@@ -44,19 +44,16 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		if(bytesLeidos != sizeof(pid_t)){
 			continue;
 		}
-		
-		Logger::log("CALESITA: chico hace la cola %d", kid);
+
+		Logger::log("chico hace la cola %d", kid);
 
 		kids.push_back(kid);
 
 		if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
-			exitLock.tomarLock();
 
-			Logger::log("CALESITA: ya estan todos los chicos. Limpio calesita.");
-			calesita.clear();
-
-			calesita.tomarLock();
-			Logger::log("CALESITA: Dejo entrar a los chicos");
+			Logger::log("estan todos los chicos para entrar");
+			calesita.inicializarNuevaVuelta();
+			Logger::log("Dejo entrar a los chicos");
 
 			for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
 				pid_t kidPid = (*it);
@@ -68,20 +65,14 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				chico.cerrar();
 			}
 
-			Logger::log("CALESITA: Espero que entren todos los chicos");
-			calesita.liberarLock();
-			calesita.esperarEntradaChicos(cantidad);
+			if(calesita.esperarEntradaChicos(cantidad)){ // TODO: manejar error
+			}
 
-			Logger::log("CALESITA: Inicia la vuelta s: %d", t_vuelta);
-
-			sleep(t_vuelta);
-
-			Logger::log("CALESITA: Termino la vuelta. Espero a que salgan los chicos");
-
-			exitLock.liberarLock();
+			if(calesita.darVuelta()){ //TODO: manejar error
+			}
 
 			kidsOut.tomarLock();
-			Logger::log("CALESITA: Salieron todos los chicos");
+			Logger::log("Salieron todos los chicos");
 			kidsOut.liberarLock();
 
 			cant_chicos -= cantidad;
@@ -89,7 +80,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				break;
 			cantidad = 0;
 			kids.clear();
-			calesita.liberarLock();
 		}
 	}
 

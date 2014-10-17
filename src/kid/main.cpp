@@ -10,7 +10,8 @@
 using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
-	Logger::compileInfo("KID");
+	Logger::setName(argv[0]);
+	Logger::log("Inicio");
 
 	pid_t myPid = getpid();
 
@@ -24,7 +25,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	ticket.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 	ticket.cerrar();
 
-	Logger::log("KID: compro entrada");
+	Logger::log("compro entrada");
 
 	pid_t otherPid;
 	FifoLectura kidIn(ss.str());
@@ -32,46 +33,40 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	ssize_t bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
 	if(bytesLeidos != sizeof(pid_t)){
-		Logger::log("KID: error comprando la entrada");
+		Logger::log(" error comprando la entrada");
 		return -1;
 	}
 
-	Logger::log("KID: Hago la fila para la calesita");
+	Logger::log("Hago la fila para la calesita");
 
 	FifoEscritura queue(QUEUE_FIFO);
 	queue.abrir();
 	queue.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 	queue.cerrar();
 
-	Logger::log("KID: Espero a la calesita");
+	Logger::log("Espero a la calesita");
 
 	bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
 	if(bytesLeidos != sizeof(pid_t)){
-		Logger::log("KID: error esperando a la calesita");
+		Logger::log("error esperando a la calesita");
 		return -1;
 	}
 
-	Logger::log("KID: Entro a la calesita y quiero lugar %d", posicionDeseada);
+	Logger::log("Entro a la calesita y quiero lugar %d", posicionDeseada);
 
-	Calesita calesita;
-	calesita.tomarLock();
-	int posicionObtenida = calesita.ocuparPosicion(posicionDeseada);
-	Logger::log("KID: Entre a la calesita y ocupe la posicion %d", posicionObtenida);
-	calesita.liberarLock();
+	CalesitaUsuario calesita;
+	calesita.ocuparPosicion(posicionDeseada);
 
 	LockFile imOut(KIDS_OUT_LOCK);
 	imOut.tomarLock(false);
 
-	LockFile exitLock(SALIDA_LOCK);
-	exitLock.tomarLock();
-
-	Logger::log("KID: Es mi turno de salir");
-	exitLock.liberarLock();
+	if(calesita.divertirme()){ //TODO: manejar error
+	}
 
 	kidIn.cerrar();
 	kidIn.eliminar();
 
-	Logger::log("KID: End");
+	Logger::log("End");
 
 	imOut.liberarLock();
 	return 0;

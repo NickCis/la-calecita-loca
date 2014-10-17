@@ -13,11 +13,11 @@
 using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
-	Logger::compileInfo("SELLER");
+	Logger::setName(argv[0]);
 	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
 		chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-	Logger::log("SELLER: costo de entrada: %dcantidad de chicos: %d", ticket_cost, chicos);
+	Logger::log("Inicio: costo de entrada: %dcantidad de chicos: %d", ticket_cost, chicos);
 
 	FifoLectura tickets(SELLER_FIFO);
 	tickets.abrir(true);
@@ -40,7 +40,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 			continue;
 		}
 		
-		Logger::log("SELLER: chico %d quiere entrada", kidPid);
+		Logger::log("Chico %d quiere comprar una entrada", kidPid);
 
 		lock.tomarLock();
 		recaudacion += ticket_cost;
@@ -54,13 +54,13 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		chico.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
 		chico.cerrar();
 
-		Logger::log("SELLER: chico %d compro entrada", kidPid);
+		Logger::log("chico %d le vendi una entrada", kidPid);
 
 	}
 
 	tickets.cerrar();
 	tickets.eliminar();
 
-	Logger::log("SELLER: Vendi todas las entradas. Salgo.");
+	Logger::log("Vendi todas las entradas. Salgo.");
 	return 0;
 }

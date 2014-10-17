@@ -26,7 +26,6 @@ class Logger {
 		 */
 		static void log(const std::string &fmt, ...);
 
-
 		/** Setea el modo del logger
 		 * @param mode: modo a asignar
 		 */
@@ -42,6 +41,11 @@ class Logger {
 		 */
 		static void compileInfo();
 
+		/** Setter para el nombre del proceso
+		 */
+		static void setName(const std::string &name);
+		static void setName(const char* name_c);
+
 		/** Logea la informacion de compilacion anteponiendole un texto.
 		 * @param name: texto que se antepone al mensaje de la informacion de compilacion
 		 * @see compileInfo
@@ -56,6 +60,10 @@ class Logger {
 		/** Path del archivo de salida en modo debug
 		 */
 		static std::string path;
+
+		/** Nombre del proceso
+		 */
+		static std::string name;
 
 		/** Modo en que se encuentra configurado
 		 */

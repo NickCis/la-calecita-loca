@@ -4,10 +4,11 @@
 #include <unistd.h>
 
 #include "lock_file.h"
+#include "semaforo.h"
 #include "memoria_compartida3.h"
 
 class Calesita {
-	private:
+	protected:
 		/** Memoria compartida usada para las posiciones de la calesita
 		 */
 		MemoriaCompartida3<pid_t> *shm;
@@ -28,10 +29,6 @@ class Calesita {
 		 */
 		pid_t *posiciones;
 
-	public:
-		Calesita();
-		~Calesita();
-
 		/** Toma lock del lock de archivo de la shm asignada a la memoria compartida de la calesita
 		 * @return salida de LockFile::tomarLock()
 		 */
@@ -42,18 +39,56 @@ class Calesita {
 		 */
 		int liberarLock();
 
+		Semaforo dentroCalesita;
+
+		LockFile exitLock;
+
+		Calesita();
+		~Calesita();
+};
+
+class CalesitaUsuario: public Calesita {
+	public:
+		CalesitaUsuario();
+		~CalesitaUsuario();
+
 		/** Ocupa la posicion deseada, de estar ocupada ocupa otra cercana.
-		 * No toma lock, hace falta hacerlo externamente
 		 * @param pos posicion a ocupar
 		 * @return posicion ocupada realmente o -1 si error
 		 */
 		int ocuparPosicion(int pos);
 
-		void clear();
+		/** Metodo que hace que el chico se diverta en la calesita, es decir, se queda esperando a que termine
+		 * @return salida de los locks
+		 */
+		int divertirme();
+};
+
+class CalesitaControlador: public Calesita{
+	protected:
+		/** Limpia la shm de la calesita
+		 * @return 0 bien, resto error
+		 */
+		int clear();
+
+	public:
+		CalesitaControlador();
+		~CalesitaControlador();
+
+		/** Inicializa la calesita para una nueva vuelta.
+		 * @return 0 bien, resto error
+		 */
+		int inicializarNuevaVuelta();
 
 		/** Esperar a que entren todos los chicos.
 		 * @param cantChicos cantidad de chicos que hay que esperar que entren
+		 * @return 0 ok, resto error
 		 */
-		void esperarEntradaChicos(int cantChicos);
+		int esperarEntradaChicos(int cantChicos);
+
+		/** Da una vuelta.
+		 * @return 0 bien, resto error
+		 */
+		int darVuelta();
 };
 #endif

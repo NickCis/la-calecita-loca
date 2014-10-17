@@ -9,7 +9,7 @@
 #define KID_FIFO "/tmp/kid_fifo_" // -> Path de archivo fifo que leen los chicos
 #define POSICIONES_CALESITA "/tmp/calesita.pos" // -> Path de SHM donde se guardan las posiciones de la calesita
 #define POSICIONES_CALESITA_CHAR 'A' // -> Letra de la SHM donde se guardan las posiciones de la calesita
-#define DENTRO_CALESITA_FIFO "/tmp/calesita_dentro" // -> Path de archivo fifo donde escriben los chicos para decir que ya entraron y lee la calesita para saber que ya entraron los chicos
+#define DENTRO_CALESITA "/tmp/calesita_dentro" // -> Path del semaforo donde escriben los chicos para decir que ya entraron y lee la calesita para saber que ya entraron los chicos
 
 #define SALIDA_LOCK "/tmp/salida.lock" // -> Path de lock file que se usa para que los chicos salgan de la calesita
 #define KIDS_OUT_LOCK "/tmp/kids_out.lock" // -> Path de lock file que se usa para que la calesita sepa cuando ya salieron todos los chivos

@@ -19,6 +19,7 @@ using std::stringstream;
 bool Logger::isInit = false;
 Logger::Mode Logger::mode = Logger::NORMAL;
 string Logger::path = "";
+string Logger::name = "";
 
 void Logger::log(const string &fmt, ...){
 	Logger::init();
@@ -41,7 +42,10 @@ void Logger::log(const string &fmt, ...){
 				time_t t = time(NULL);
 				strftime(time_text, 512, "%T", localtime(&t));
 				stringstream ss;
-				ss << time_text << " [" << getpid() << "] " << text << endl;
+				ss << time_text << " [" << getpid() << "] ";
+				if(Logger::name != "")
+					ss << name << ": ";
+				ss << text << endl;
 				const char *txt = ss.str().c_str();
 				file.escribir(txt, strlen(txt));
 				file.liberarLock();
@@ -83,7 +87,11 @@ void Logger::compileInfo(){
 	Logger::log("git: '" GIT_REV "' compile date: '" TIME_COMPILED "'");
 }
 
-void Logger::compileInfo(const string &name){
-	Logger::init();
-	Logger::log("%s: git: '" GIT_REV "' date: '" TIME_COMPILED "'", name.c_str());
+void Logger::setName(const char* name_c){
+	string name = name_c;
+	Logger::setName(name);
+}
+
+void Logger::setName(const string& name){
+	Logger::name = name;
 }
