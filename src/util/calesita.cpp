@@ -5,7 +5,7 @@
 #include "../util/fifo_escritura.h"
 #include "../util/logger.h"
 
-Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), dentroCalesita(DENTRO_CALESITA), exitLock(SALIDA_LOCK)  {
+Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), dentroCalesita(DENTRO_CALESITA), exitLock(SALIDA_LOCK), kidsOut(KIDS_OUT)  {
 	this->cantidadPosiciones = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS);
 	this->size = sizeof(pid_t) * this->cantidadPosiciones;
 	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALESITA, POSICIONES_CALESITA_CHAR, this->size);
@@ -29,10 +29,13 @@ CalesitaUsuario::CalesitaUsuario(){
 }
 
 CalesitaUsuario::~CalesitaUsuario(){
+	kidsOut.v();
 }
 
 int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 	pid_t myPid = getpid();
+
+	Logger::log("Entro a la calesita y quiero lugar %d", pos);
 
 	pos = pos % this->cantidadPosiciones;
 
@@ -52,10 +55,14 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 	this->posiciones[pos] = myPid;
 	this->shm->escribir(this->posiciones);
 
-	this->dentroCalesita.p();
+	sleep(1);
 	Logger::log("Entre a la calesita y ocupe la posicion %d", pos);
 
 	this->liberarLock();
+	sleep(1);
+
+	kidsOut.p();
+	this->dentroCalesita.p();
 
 	return pos;
 }
@@ -77,6 +84,8 @@ CalesitaControlador::CalesitaControlador(){
 }
 
 CalesitaControlador::~CalesitaControlador(){
+	dentroCalesita.eliminar();
+	kidsOut.eliminar();
 }
 
 int CalesitaControlador::clear(){
@@ -93,25 +102,25 @@ int CalesitaControlador::clear(){
 	return ret;
 }
 
-int CalesitaControlador::esperarEntradaChicos(int cantChicos){
+int CalesitaControlador::esperarEntradaChicos(){
 	int ret = 0;
-	Logger::log("Espero que entren %d chicos", cantChicos);
-	if((ret = dentroCalesita.setVal(cantChicos)))
-		return ret;
 
-	if((ret = this->liberarLock()))
-		return ret;
+	Logger::log("Espero a que entren los chicos");
 
 	if((ret = dentroCalesita.wait()))
 		return ret;
 
-	Logger::log("Ya entraron todos los chicos", cantChicos);
+	Logger::log("Ya entraron todos los chicos");
 	return ret;
 }
 
-int CalesitaControlador::inicializarNuevaVuelta(){
+int CalesitaControlador::inicializarNuevaVuelta(int cantChicos){
 	int ret = 0;
 	if((ret = exitLock.tomarLock()))
+		return ret;
+
+	Logger::log("Van a entrar %d chicos", cantChicos);
+	if((ret = dentroCalesita.setVal(cantChicos)))
 		return ret;
 
 	Logger::log("Limpio calesita");
@@ -129,6 +138,17 @@ int CalesitaControlador::darVuelta(){
 	Logger::log("Termino la vuelta.");
 	if((ret = exitLock.liberarLock()))
 		return ret;
+
+	return ret;
+}
+
+int CalesitaControlador::esperarSalidaChicos(){
+	int ret = 0;
+	Logger::log("Espero salida de los chicos");
+	if((ret = kidsOut.wait()))
+		return ret;
+
+	Logger::log("Salieron todos los chicos");
 
 	return ret;
 }

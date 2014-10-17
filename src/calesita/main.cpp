@@ -22,7 +22,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
 		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-
 	Logger::log("Inicio: cantidad de asientos: %d cantidad de chicos: %d", cant_asientos, cant_chicos);
 
 	FifoLectura fila(QUEUE_FIFO);
@@ -35,10 +34,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	vector<pid_t> kids;
 
 	CalesitaControlador calesita;
-
-	LockFile exitLock(SALIDA_LOCK);
-	LockFile kidsOut(KIDS_OUT_LOCK);
-
 	for(;;){
 		bytesLeidos = fila.leer(static_cast<void*> (&kid), sizeof(pid_t));
 		if(bytesLeidos != sizeof(pid_t)){
@@ -52,7 +47,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
 
 			Logger::log("estan todos los chicos para entrar");
-			calesita.inicializarNuevaVuelta();
+			calesita.inicializarNuevaVuelta(cantidad);
 			Logger::log("Dejo entrar a los chicos");
 
 			for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
@@ -65,15 +60,17 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 				chico.cerrar();
 			}
 
-			if(calesita.esperarEntradaChicos(cantidad)){ // TODO: manejar error
+			if(calesita.esperarEntradaChicos()){ // TODO: manejar error
+				Logger::log("error %d",  __LINE__);
 			}
 
 			if(calesita.darVuelta()){ //TODO: manejar error
+				Logger::log("error %d",  __LINE__);
 			}
 
-			kidsOut.tomarLock();
-			Logger::log("Salieron todos los chicos");
-			kidsOut.liberarLock();
+			if(calesita.esperarSalidaChicos()){ //TODO: manejar error
+				Logger::log("error %d",  __LINE__);
+			}
 
 			cant_chicos -= cantidad;
 			if(cant_chicos == 0)
@@ -86,6 +83,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	fila.cerrar();
 	fila.eliminar();
 
-	Logger::log("CALESITA: Ya todos los chicos se divirtieron en mi. Salgo.");
+	Logger::log("Ya todos los chicos se divirtieron en mi. Salgo.");
 	return 0;
 }

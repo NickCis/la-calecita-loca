@@ -12,7 +12,7 @@
 #define DENTRO_CALESITA "/tmp/calesita_dentro" // -> Path del semaforo donde escriben los chicos para decir que ya entraron y lee la calesita para saber que ya entraron los chicos
 
 #define SALIDA_LOCK "/tmp/salida.lock" // -> Path de lock file que se usa para que los chicos salgan de la calesita
-#define KIDS_OUT_LOCK "/tmp/kids_out.lock" // -> Path de lock file que se usa para que la calesita sepa cuando ya salieron todos los chivos
+#define KIDS_OUT "/tmp/kids_out" // -> Path de lock file que se usa para que la calesita sepa cuando ya salieron todos los chivos
 
 #define DEFAULT_TICKET_COST 5 // -> Valor por defecto del precio de una entrada
 #define DEFAULT_CANT_ASIENTOS 5 // -> Valor por defecto de la cantidad de asientos de la calesita

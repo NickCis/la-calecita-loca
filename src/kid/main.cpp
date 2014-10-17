@@ -52,13 +52,8 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		return -1;
 	}
 
-	Logger::log("Entro a la calesita y quiero lugar %d", posicionDeseada);
-
 	CalesitaUsuario calesita;
 	calesita.ocuparPosicion(posicionDeseada);
-
-	LockFile imOut(KIDS_OUT_LOCK);
-	imOut.tomarLock(false);
 
 	if(calesita.divertirme()){ //TODO: manejar error
 	}
@@ -68,6 +63,5 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	Logger::log("End");
 
-	imOut.liberarLock();
 	return 0;
 }

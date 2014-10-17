@@ -41,7 +41,13 @@ class Calesita {
 
 		Semaforo dentroCalesita;
 
+		/** FileLock usado para trabar la salida de los chicos de la calesita
+		 */
 		LockFile exitLock;
+
+		/** Semaforo usado para trabar el inicio de la siguiente vuelta mientras siga habiendo chicos en la calesita
+		 */
+		Semaforo kidsOut;
 
 		Calesita();
 		~Calesita();
@@ -66,7 +72,7 @@ class CalesitaUsuario: public Calesita {
 
 class CalesitaControlador: public Calesita{
 	protected:
-		/** Limpia la shm de la calesita
+		/** Limpia la shm de la calesita.
 		 * @return 0 bien, resto error
 		 */
 		int clear();
@@ -76,19 +82,24 @@ class CalesitaControlador: public Calesita{
 		~CalesitaControlador();
 
 		/** Inicializa la calesita para una nueva vuelta.
+		 * @param cantChicos cantidad de chicos que hay que esperar que entren
 		 * @return 0 bien, resto error
 		 */
-		int inicializarNuevaVuelta();
+		int inicializarNuevaVuelta(int cantChicos);
 
 		/** Esperar a que entren todos los chicos.
-		 * @param cantChicos cantidad de chicos que hay que esperar que entren
 		 * @return 0 ok, resto error
 		 */
-		int esperarEntradaChicos(int cantChicos);
+		int esperarEntradaChicos();
 
 		/** Da una vuelta.
 		 * @return 0 bien, resto error
 		 */
 		int darVuelta();
+
+		/** Esperar a salida de todos los chicos
+		 * @return 0 ok, resto error
+		 */
+		int esperarSalidaChicos();
 };
 #endif
