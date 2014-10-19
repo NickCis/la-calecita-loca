@@ -14,12 +14,12 @@ public:
 
 	/** Abre la fifo (realiza open)
 	 */
-	void abrir();
+	int abrir();
 
 	/** Abre la fifo (realiza open)
 	 * @param rw: si es true abre la fifo en modo O_RDWR en vez de O_RDONLY
 	 */
-	void abrir(bool rw);
+	int abrir(bool rw);
 
 	/** Lee datos de la fifo.
 	 * @param buffer: destino de donde se pone la informacion leida (debe tener memoria asignada)

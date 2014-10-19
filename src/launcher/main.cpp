@@ -99,6 +99,8 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	EXEC_PROGRAM("seller");
 	EXEC_PROGRAM("calesita");
 
+	sleep(5);
+
 	for(int i=0; i < chicos ; i++){
 		EXEC_PROGRAM("kid");
 	}

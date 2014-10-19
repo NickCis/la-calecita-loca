@@ -14,7 +14,7 @@ UTIL=$(patsubst %.cpp, %.o, $(UTIL_CPP))
 
 SRC_PATH=./src/
 
-CFLAGS=-Wall '-DGIT_REV="$(shell git rev-parse HEAD)"' '-DTIME_COMPILED="$(shell date '+%F %T')"' -std=c++11 -Wextra -g -O3
+CFLAGS=-Wall '-DGIT_REV="$(shell git rev-parse HEAD)"' '-DTIME_COMPILED="$(shell date '+%F %T')"' -std=c++11 -Wextra -g
 LDFLAGS=
 
 .PHONY: all

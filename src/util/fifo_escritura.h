@@ -13,8 +13,9 @@ public:
 	~FifoEscritura();
 
 	/** Abre la fifo (realiza open)
+	 * @return 0 bien, resto mal
 	 */
-	void abrir();
+	int abrir();
 
 	/** Escribe datos de la fifo.
 	 * @param buffer: datos que se escribiran

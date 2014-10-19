@@ -16,9 +16,11 @@ Semaforo::~Semaforo() {
 void Semaforo::init(const string& nombre, char letter, int semcant) {
 	key_t clave = ftok(nombre.c_str(), letter);
 	this->id = semget(clave, semcant, 0666 | IPC_CREAT );
+	if(this->id == -1)
+		throw string("Error semget");
 }
 
-int Semaforo::setVal(int i) const {
+int Semaforo::semctl(int cmd, int arg) const {
 	union semnum {
 		int val;
 		struct semid_ds* buf;
@@ -26,8 +28,20 @@ int Semaforo::setVal(int i) const {
 	};
 
 	semnum init;
-	init.val = i;
-	return semctl(this->id, this->semnum, SETVAL, init);
+	init.val = arg;
+	return ::semctl(this->id, this->semnum, cmd, init);
+}
+
+int Semaforo::semctl(int cmd) const {
+	return ::semctl(this->id, this->semnum, cmd);
+}
+
+int Semaforo::setVal(int i) const {
+	return this->semctl(SETVAL, i);
+}
+
+int Semaforo::getVal() const {
+	return this->semctl(GETVAL);
 }
 
 int Semaforo::semop(short sem_op, short sem_flg) const{
@@ -41,12 +55,12 @@ int Semaforo::semop(short sem_op, short sem_flg) const{
 	return ::semop(this->id, &op, 1);
 }
 
-int Semaforo::p(int i) const {
-	return this->semop(-i, SEM_UNDO);
+int Semaforo::p(int i, short sem_flg) const {
+	return this->semop(-i, sem_flg);
 }
 
-int Semaforo::v(int i) const {
-	return this->semop(i, SEM_UNDO);
+int Semaforo::v(int i, short sem_flg) const {
+	return this->semop(i, sem_flg);
 }
 
 int Semaforo::wait() const {
@@ -54,5 +68,5 @@ int Semaforo::wait() const {
 }
 
 int Semaforo::eliminar() const {
-	return semctl(this->id, this->semnum, IPC_RMID);
+	return semctl(IPC_RMID);
 }

@@ -5,7 +5,7 @@
 #include "../util/fifo_escritura.h"
 #include "../util/logger.h"
 
-Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), dentroCalesita(DENTRO_CALESITA), exitLock(SALIDA_LOCK), kidsOut(KIDS_OUT)  {
+Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), exitLock(SALIDA_LOCK), dentroCalesita(CALESITA_SEM, 0, 2), kidsOut(CALESITA_SEM, 1, 2)  {
 	this->cantidadPosiciones = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS);
 	this->size = sizeof(pid_t) * this->cantidadPosiciones;
 	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALESITA, POSICIONES_CALESITA_CHAR, this->size);
@@ -29,7 +29,7 @@ CalesitaUsuario::CalesitaUsuario(){
 }
 
 CalesitaUsuario::~CalesitaUsuario(){
-	kidsOut.v();
+	kidsOut.p();
 }
 
 int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
@@ -39,7 +39,8 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 
 	pos = pos % this->cantidadPosiciones;
 
-	this->tomarLock();
+	if(this->tomarLock())
+		return -1;
 
 	this->shm->leer(this->posiciones);
 
@@ -55,14 +56,16 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 	this->posiciones[pos] = myPid;
 	this->shm->escribir(this->posiciones);
 
-	sleep(1);
-	Logger::log("Entre a la calesita y ocupe la posicion %d", pos);
+	Logger::log("Entre a la calesita y ocupe la posicion %d.", pos);
 
-	this->liberarLock();
-	sleep(1);
+	if(this->liberarLock())
+		return -1;
 
-	kidsOut.p();
-	this->dentroCalesita.p();
+	if(kidsOut.v())
+		return -1;
+
+	if(this->dentroCalesita.p())
+		return -1;
 
 	return pos;
 }
@@ -105,12 +108,12 @@ int CalesitaControlador::clear(){
 int CalesitaControlador::esperarEntradaChicos(){
 	int ret = 0;
 
-	Logger::log("Espero a que entren los chicos");
+	Logger::log("Espero a que entren los chicos.");
 
 	if((ret = dentroCalesita.wait()))
 		return ret;
 
-	Logger::log("Ya entraron todos los chicos");
+	Logger::log("Ya entraron todos los chicos.");
 	return ret;
 }
 

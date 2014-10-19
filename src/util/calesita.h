@@ -39,11 +39,17 @@ class Calesita {
 		 */
 		int liberarLock();
 
-		Semaforo dentroCalesita;
+		/** FileLock usado para trabar la entrada de la calesita
+		 */
+		//LockFile entradaLock;
 
-		/** FileLock usado para trabar la salida de los chicos de la calesita
+		/** FileLock usado para trabar la salida de la calesita
 		 */
 		LockFile exitLock;
+
+		/** Semaforo usado para ver cuando entraron todos los chicos a la calesita
+		 */
+		Semaforo dentroCalesita;
 
 		/** Semaforo usado para trabar el inicio de la siguiente vuelta mientras siga habiendo chicos en la calesita
 		 */

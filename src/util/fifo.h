@@ -19,16 +19,19 @@ public:
 	virtual ~Fifo();
 
 	/** Abre la fifo (realiza open)
+	 * @return 0 bien, resto error
 	 */
-	virtual void abrir() = 0;
+	virtual int abrir() = 0;
 
 	/** Cierra la fifo (realiza close)
+	 * @return 0 bien, resto error
 	 */
-	void cerrar();
+	int cerrar();
 
 	/** Elimina la fifo, (realiza unlink)
+	 * @return 0 bien, resto error
 	 */
-	void eliminar() const;
+	int eliminar() const;
 
 protected:
 	/** Path de la fifo
