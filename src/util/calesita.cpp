@@ -64,7 +64,7 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 	if(kidsOut->v())
 		return -1;
 
-	if(this->dentroCalesita->p())
+	if(this->dentroCalesita->p(1, IPC_NOWAIT))
 		return -1;
 
 	return pos;
@@ -72,7 +72,6 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 
 int CalesitaUsuario::divertirme(){
 	int ret = 0;
-	Logger::log("Wiii, una vuelta =)");
 	if((ret = exitLock.tomarLock()))
 		return ret;
 
@@ -95,7 +94,7 @@ int CalesitaControlador::clear(){
 	int ret = 0;
 	if((ret = this->lock.tomarLock()))
 		return ret;
-	Logger::log("Limpio la SHM de calesita");
+	Logger::log("Limpio la calesita");
 	memset(this->posiciones, 0, this->size);
 	this->shm->escribir(this->posiciones); //TODO: Fijarse si esto puede salir con error
 

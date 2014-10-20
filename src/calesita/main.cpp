@@ -11,13 +11,13 @@
 #include <sys/wait.h>
 
 #include <vector>
-#include <sstream>
 #include <memory>
+#include <algorithm>
 
+using std::min;
 using std::vector;
 using std::string;
 using std::unique_ptr;
-using std::stringstream;
 
 int main(int argc __attribute__ ((unused)), char* argv[]){
 	Logger::setName(argv[0]);
@@ -35,19 +35,23 @@ int main(int argc __attribute__ ((unused)), char* argv[]){
 
 	CREATE_UNIQUE_PTR(calesita, CalesitaControlador, new CalesitaControlador());
 
-	EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(cantidad));
+	EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(min(cant_asientos, cant_chicos)));
 
 	for(;;){
 		EXIT_ON_TRUE(colaCalesita->read(&kid));
 
 		Logger::log("chico [%d] hace la cola", kid);
 
-		stringstream ss;
-		ss << KID_FIFO << kid;
-		FifoEscritura chico(ss.str());
-		chico.open();
-		chico.write(static_cast<const void*> (&myPid), sizeof(pid_t));
-		chico.close();
+		FifoEscritura chico(Config::buildKidFifoPath(kid));
+
+		EXIT_ON_TRUE_EXE(chico.mknod() && errno != EEXIST, {
+			Logger::log("Error %d '%s'", errno, strerror(errno));
+		});
+		EXIT_ON_TRUE(chico.open());
+		EXIT_ON_TRUE_EXE(chico.write(static_cast<const void*> (&myPid), sizeof(pid_t) != sizeof(pid_t)), {
+			Logger::log("Error %d '%s'", errno, strerror(errno));
+		});
+		EXIT_ON_TRUE(chico.close());
 
 		Logger::log("dejo entrar a chico  [%d]", kid);
 
@@ -63,7 +67,7 @@ int main(int argc __attribute__ ((unused)), char* argv[]){
 				break;
 			cantidad = 0;
 
-			EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(cantidad));
+			EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(min(cant_asientos, cant_chicos)));
 		}
 	}
 

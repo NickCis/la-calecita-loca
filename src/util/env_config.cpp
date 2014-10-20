@@ -68,8 +68,15 @@ string Config::getBinPath(const char* name){
 	string n = name;
 	return Config::getBinPath(n);
 }
+
 string Config::getBinPath(const string& name){
 	stringstream ss;
 	ss << Config::getBinPath() << "/" << name;
+	return ss.str();
+}
+
+string Config::buildKidFifoPath(pid_t kid){
+	stringstream ss;
+	ss << KID_FIFO << myPid;
 	return ss.str();
 }

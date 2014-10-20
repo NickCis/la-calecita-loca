@@ -53,8 +53,8 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	if(! runExe(binPath+"/" X, exit))\
 		return exit
 
-	EXEC_PROGRAM("seller");
-	EXEC_PROGRAM("calesita");
+	EXEC_PROGRAM(SELLER_BIN);
+	EXEC_PROGRAM(CALESITA_BIN);
 
 	sleep(5);
 

@@ -8,14 +8,13 @@
 #include "../util/cola.h"
 
 #include <unistd.h>
+#include <errno.h>
 
 #include <string>
-#include <sstream>
 #include <memory>
 
 using std::string;
 using std::unique_ptr;
-using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::setName(argv[0]);
@@ -36,26 +35,31 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	box->escribir(recaudacion);
 	lock->liberarLock();
 
-	CREATE_UNIQUE_PTR(colaTickets, ColaLectura<pid_t>, new ColaLectura<pid_t>(SELLER_SEM, SELLER_FIFO));
+	CREATE_UNIQUE_PTR(colaTickets, ColaLectura<pid_t>, new ColaLectura<pid_t>(Config::getBinPath(SELLER_BIN), SELLER_FIFO));
 
 	for(int i=0;i<chicos;i++){
 		EXIT_ON_TRUE(colaTickets->read(&kidPid));
 
-		Logger::log("Chico %d quiere comprar una entrada", kidPid);
+		Logger::log("Chico [%d] quiere comprar una entrada", kidPid);
 
 		lock->tomarLock();
 		recaudacion += ticket_cost;
 		box->escribir(recaudacion);
+		Logger::log("Recaudacion %d", recaudacion);
 		lock->liberarLock();
 
-		stringstream ss;
-		ss << KID_FIFO << kidPid;
-		FifoEscritura chico(ss.str());
-		chico.open();
-		chico.write(static_cast<const void*> (&myPid), sizeof(pid_t));
-		chico.close();
+		FifoEscritura chico(Config::buildKidFifoPath(kidPid));
+		EXIT_ON_TRUE_EXE(chico.mknod() && errno != EEXIST, {
+			Logger::log("Error %d '%s'", errno, strerror(errno));
+		});
 
-		Logger::log("chico %d le vendi una entrada", kidPid);
+		EXIT_ON_TRUE(chico.open());
+		EXIT_ON_TRUE_EXE(chico.write(static_cast<const void*> (&myPid), sizeof(pid_t) != sizeof(pid_t)), {
+			Logger::log("Error %d '%s'", errno, strerror(errno));
+		});
+		EXIT_ON_TRUE(chico.close());
+
+		Logger::log("chico [%d] le vendi una entrada", kidPid);
 	}
 
 	Logger::log("Vendi todas las entradas");

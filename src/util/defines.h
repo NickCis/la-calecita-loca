@@ -3,7 +3,6 @@
 #include <unistd.h>
 
 #define SELLER_FIFO "/tmp/seller_fifo" // -> Path de archivo fifo que leera el vendedor
-#define SELLER_SEM "/tmp/seller_sem" // -> Path del semaforo del vendedor
 #define MONEY_BOX "/tmp/money.box" // -> Path de SHM para guardar la recaudacion
 #define MONEY_BOX_CHAR 'A' // -> Letra de la SHM donde se guarda la recaudacion
 #define QUEUE_CALESITA_FIFO "/tmp/queue_calesita_fifo" // -> Path de archivo fifo que leera la calesita (Cola que hacen los chicos para entrar)

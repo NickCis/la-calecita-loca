@@ -14,11 +14,22 @@ namespace Config {
 	int getInt(const std::string& name, const int& value);
 	std::string getStr(const std::string& name, const std::string& value);
 
-	/** Para obtener el path donde estan los ejecutables
+	/** Obtiene el path donde estan los ejecutables
 	 * @return string donde esta el ejecutable
 	 */
 	std::string getBinPath();
+	/** Obtiene el path donde estan los ejecutables, anteponiendole '/name/'
+	 * @param name texto que se anteponpdra
+	 * @return string donde esta el ejecutable
+	 */
 	std::string getBinPath(const std::string& name);
 	std::string getBinPath(const char* name);
+
+	/** Crea el path del fifo para un chico con pid <kid>
+	 * @param kid pid del chico
+	 * @return path del fifo para el chico de pid kid
+	 */
+	std::string buildKidFifoPath(pid_t kid);
+
 }
 #endif

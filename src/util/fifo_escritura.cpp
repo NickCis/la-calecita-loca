@@ -7,7 +7,7 @@ FifoEscritura::~FifoEscritura() {
 }
 
 int FifoEscritura::open() {
-	return !(fd = ::open(nombre.c_str(), O_WRONLY));
+	return (fd = ::open(nombre.c_str(), O_WRONLY)) == -1;
 }
 
 ssize_t FifoEscritura::write(const void* buffer,const ssize_t buffsize) const {
