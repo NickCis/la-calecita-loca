@@ -11,10 +11,6 @@
 
 class Calesita {
 	protected:
-		/** Memoria compartida usada para las posiciones de la calesita
-		 */
-		MemoriaCompartida3<pid_t> *shm;
-
 		/** Tama~no de la memoria compartida
 		 */
 		size_t size;
@@ -25,15 +21,7 @@ class Calesita {
 
 		/** Lock para la shm
 		 */
-		LockFile lock;
-
-		/** Posiciones de la calesita (Leidas de la shm)
-		 */
-		pid_t *posiciones;
-
-		/** FileLock usado para trabar la entrada de la calesita
-		 */
-		//LockFile entradaLock;
+		LockFile posicionesLock;
 
 		/** FileLock usado para trabar la salida de la calesita
 		 */
@@ -52,6 +40,24 @@ class Calesita {
 };
 
 class CalesitaUsuario: public Calesita {
+	protected:
+		/** Bloquea posicion pos.
+		 * @param pos posicion a bloquear
+		 * @return 0 ok, resto error
+		 */
+		int lockPosicion(int pos);
+
+		/** Lee posicion pos.
+		 * @param pos posicion a leer
+		 * @return valor de la posicion (o negativo si error)
+		 */
+		pid_t leerPosicion(int pos);
+
+		/** Escribe posicion en pos.
+		 * @param pos posicion a escribri
+		 * @return 0 ok, resto error
+		 */
+		int escribirPosicion(int pos);
 	public:
 		CalesitaUsuario();
 		~CalesitaUsuario();

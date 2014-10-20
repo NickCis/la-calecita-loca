@@ -47,7 +47,7 @@ void Logger::log(const string &fmt, ...){
 					ss << name << ": ";
 				ss << text << endl;
 				const char *txt = ss.str().c_str();
-				file.escribir(txt, strlen(txt));
+				file.write(txt, strlen(txt));
 				file.liberarLock();
 			}
 			break;

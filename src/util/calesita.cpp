@@ -8,11 +8,9 @@
 using std::string;
 using std::unique_ptr;
 
-Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), exitLock(SALIDA_LOCK)  {
+Calesita::Calesita() : size(0), cantidadPosiciones(0), posicionesLock(POSICIONES_CALESITA), exitLock(SALIDA_LOCK)  {
 	this->cantidadPosiciones = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS);
 	this->size = sizeof(pid_t) * this->cantidadPosiciones;
-	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALESITA, POSICIONES_CALESITA_CHAR, this->size);
-	this->posiciones = new pid_t[this->cantidadPosiciones];
 
 	string binPath = Config::getBinPath(CALESITA_BIN);
 
@@ -21,8 +19,6 @@ Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONE
 }
 
 Calesita::~Calesita() {
-	delete this->shm;
-	delete[] this->posiciones;
 }
 
 CalesitaUsuario::CalesitaUsuario(){
@@ -32,33 +28,48 @@ CalesitaUsuario::~CalesitaUsuario(){
 	kidsOut->p();
 }
 
-int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
-	pid_t myPid = getpid();
+int CalesitaUsuario::lockPosicion(int pos){
+	return this->posicionesLock.tomarLock(sizeof(pid_t), pos * sizeof(pid_t));
+}
 
+pid_t CalesitaUsuario::leerPosicion(int pos){
+	pid_t pid;
+	return this->posicionesLock.read(&pid, sizeof(pid_t), pos * sizeof(pid_t)) == sizeof(pid_t) ? pid : -1;
+}
+
+int CalesitaUsuario::escribirPosicion(int pos){
+	pid_t pid = getpid();
+	return this->posicionesLock.write(&pid, sizeof(pid_t), pos * sizeof(pid_t), SEEK_SET) == sizeof(pid_t) ? 0 : -1;
+}
+
+int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 	Logger::log("Entro a la calesita y quiero lugar %d", pos);
 
 	pos = pos % this->cantidadPosiciones;
 
-	if(this->lock.tomarLock())
+	if(this->lockPosicion(pos))
 		return -1;
 
-	this->shm->leer(this->posiciones);
+	if(this->leerPosicion(pos) > 0){
+		for(pos = 0; pos < this->cantidadPosiciones; pos++){
+			this->posicionesLock.liberarLock();
+			this->posicionesLock.tomarLock(pos);
 
-	if(this->posiciones[pos]){
-		for(pos = 0; pos < this->cantidadPosiciones; pos++)
-			if(!this->posiciones[pos])
+			if(!this->leerPosicion(pos))
 				break;
+		}
 
-		if(pos >= this->cantidadPosiciones || this->posiciones[pos])
+		if(pos >= this->cantidadPosiciones){
+			this->posicionesLock.liberarLock();
 			return -1;
+		}
 	}
 
-	this->posiciones[pos] = myPid;
-	this->shm->escribir(this->posiciones);
+	this->escribirPosicion(pos);
 
 	Logger::log("Entre a la calesita y ocupe la posicion %d.", pos);
 
-	if(this->lock.liberarLock())
+	if(this->posicionesLock.liberarLock())
 		return -1;
 
 	if(kidsOut->v())
@@ -92,13 +103,17 @@ CalesitaControlador::~CalesitaControlador(){
 
 int CalesitaControlador::clear(){
 	int ret = 0;
-	if((ret = this->lock.tomarLock()))
+	if((ret = this->posicionesLock.tomarLock()))
 		return ret;
 	Logger::log("Limpio la calesita");
-	memset(this->posiciones, 0, this->size);
-	this->shm->escribir(this->posiciones); //TODO: Fijarse si esto puede salir con error
+	//memset(this->posiciones, 0, this->size);
+	//this->shm->escribir(this->posiciones); //TODO: Fijarse si esto puede salir con error
+	for(int i=0; i < cantidadPosiciones; i++){
+		pid_t pid = 0;
+		this->posicionesLock.write(&pid, sizeof(pid_t), sizeof(pid_t) * i, SEEK_SET);
+	}
 
-	if((ret = this->lock.liberarLock()))
+	if((ret = this->posicionesLock.liberarLock()))
 		return ret;
 
 	return ret;

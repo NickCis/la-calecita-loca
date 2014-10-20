@@ -1,4 +1,5 @@
 #include "env_config.h"
+#include "defines.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,6 @@ string Config::getBinPath(const string& name){
 
 string Config::buildKidFifoPath(pid_t kid){
 	stringstream ss;
-	ss << KID_FIFO << myPid;
+	ss << KID_FIFO << kid;
 	return ss.str();
 }

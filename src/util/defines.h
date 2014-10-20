@@ -13,8 +13,8 @@
 
 #define CALESITA_BIN "calesita"
 #define SELLER_BIN "seller"
+#define KID_BIN "kid"
 
-#define ENTRADA_LOCK "/tmp/entrada.lock" // -> Path de lock file que se usa para controlar la entrada a la calesita
 #define SALIDA_LOCK "/tmp/salida.lock" // -> Path de lock file que se usa para controlar la salida a la calesita
 
 #define DEFAULT_TICKET_COST 5 // -> Valor por defecto del precio de una entrada
