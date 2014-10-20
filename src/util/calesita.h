@@ -7,6 +7,8 @@
 #include "semaforo.h"
 #include "memoria_compartida3.h"
 
+#include <memory>
+
 class Calesita {
 	protected:
 		/** Memoria compartida usada para las posiciones de la calesita
@@ -29,16 +31,6 @@ class Calesita {
 		 */
 		pid_t *posiciones;
 
-		/** Toma lock del lock de archivo de la shm asignada a la memoria compartida de la calesita
-		 * @return salida de LockFile::tomarLock()
-		 */
-		int tomarLock();
-
-		/** Libera lock del lock de archivo de la shm asignada a la memoria compartida de la calesita
-		 * @return salida de LockFile::liberarLock()
-		 */
-		int liberarLock();
-
 		/** FileLock usado para trabar la entrada de la calesita
 		 */
 		//LockFile entradaLock;
@@ -49,11 +41,11 @@ class Calesita {
 
 		/** Semaforo usado para ver cuando entraron todos los chicos a la calesita
 		 */
-		Semaforo dentroCalesita;
+		std::unique_ptr<Semaforo> dentroCalesita;
 
 		/** Semaforo usado para trabar el inicio de la siguiente vuelta mientras siga habiendo chicos en la calesita
 		 */
-		Semaforo kidsOut;
+		std::unique_ptr<Semaforo> kidsOut;
 
 		Calesita();
 		~Calesita();

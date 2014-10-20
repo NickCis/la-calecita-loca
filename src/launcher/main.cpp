@@ -4,55 +4,12 @@
 #include <iostream>
 #include <string>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <libgen.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <sys/wait.h>
-
 
 using std::cout;
 using std::endl;
 using std::string;
 using std::cin;
-
-/** Para obtener el path donde estan los ejecutables
-*/
-string getBinPath(){
-	char buf[512];
-	char linkname[64]; /* /proc/<pid>/exe */
-	pid_t pid;
-	int ret;
-	string path = "";
-
-	pid = getpid();
-
-	if (snprintf(linkname, sizeof(linkname), "/proc/%i/exe", pid) < 0){
-		return path;
-	}
-
-	/* Now read the symbolic link */
-	ret = readlink(linkname, buf, 512);
-
-	/* In case of an error, leave the handling up to the caller */
-	if (ret == -1)
-		return NULL;
-
-	/* Report insufficient buffer size */
-	if (ret >= 512) {
-		errno = ERANGE;
-		return path;
-	}
-
-	/* Ensure proper NUL termination */
-	buf[ret] = 0;
-
-	path = dirname(buf);
-
-	return path;
-}
 
 int runExe(string exe, int &exit){
 	int pid = fork();
@@ -89,7 +46,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 		return 0;
 
 
-	string binPath = getBinPath();
+	string binPath = Config::getBinPath();
 	int exit = 0;
 
 #define EXEC_PROGRAM(X) cout << "Ejecutando " X << endl;\

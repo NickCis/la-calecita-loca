@@ -1,6 +1,9 @@
 #include "semaforo.h"
 
+#include <sstream>
+
 using std::string;
+using std::stringstream;
 
 Semaforo::Semaforo(const string& nombre, int semnum, int semcant) : semnum(semnum) {
 	this->init(nombre, 'a', semcant);
@@ -16,8 +19,11 @@ Semaforo::~Semaforo() {
 void Semaforo::init(const string& nombre, char letter, int semcant) {
 	key_t clave = ftok(nombre.c_str(), letter);
 	this->id = semget(clave, semcant, 0666 | IPC_CREAT );
-	if(this->id == -1)
-		throw string("Error semget");
+	if(this->id == -1){
+		stringstream ss;
+		ss << "Error::" << __func__ << "(nombre='" << nombre << "', letter='" << letter << "', semcant="<< semcant << ") clave: '" << clave << "' id: " << this->id;
+		throw string(ss.str());
+	}
 }
 
 int Semaforo::semctl(int cmd, int arg) const {
@@ -48,7 +54,7 @@ int Semaforo::semop(short sem_op, short sem_flg) const{
 	struct sembuf op;
 
 	op.sem_num = this->semnum; // numero de semaforo
-	op.sem_op  = sem_op; // restar 1 al semaforo
+	op.sem_op  = sem_op;
 	op.sem_flg = sem_flg;
 
 	// El ultimo uno es para una sola operacion

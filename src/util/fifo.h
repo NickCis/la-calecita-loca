@@ -13,25 +13,29 @@ class Fifo {
 public:
 	/** Crea una fifo
 	 * @param nombre: path de archivo de la fifo
-	 * @param erase: booleano que indica si se debe borrar el archivo de la fifo antes de crearlo (por si llegase a existir)
 	 */
-	Fifo(const std::string nombre, bool erase = false);
+	Fifo(const std::string nombre);
 	virtual ~Fifo();
 
 	/** Abre la fifo (realiza open)
 	 * @return 0 bien, resto error
 	 */
-	virtual int abrir() = 0;
+	virtual int open() = 0;
 
 	/** Cierra la fifo (realiza close)
 	 * @return 0 bien, resto error
 	 */
-	int cerrar();
+	int close();
+
+	/** Mknod del archivo
+	 * @return 0 bien, resto error
+	 */
+	int mknod();
 
 	/** Elimina la fifo, (realiza unlink)
 	 * @return 0 bien, resto error
 	 */
-	int eliminar() const;
+	int unlink() const;
 
 protected:
 	/** Path de la fifo

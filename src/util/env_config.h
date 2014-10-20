@@ -13,5 +13,12 @@ namespace Config {
 	 */
 	int getInt(const std::string& name, const int& value);
 	std::string getStr(const std::string& name, const std::string& value);
+
+	/** Para obtener el path donde estan los ejecutables
+	 * @return string donde esta el ejecutable
+	 */
+	std::string getBinPath();
+	std::string getBinPath(const std::string& name);
+	std::string getBinPath(const char* name);
 }
 #endif

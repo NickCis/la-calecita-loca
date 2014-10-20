@@ -9,7 +9,7 @@ class Cola {
 		 */
 		Semaforo sem;
 
-		Cola(std::string semPath) : sem(semPath){}
+		Cola(std::string &semPath, int semnum = 0, int semcant = 1) : sem(semPath, semnum, semcant){}
 		~Cola(){}
 };
 
@@ -28,13 +28,13 @@ template <typename T> class ColaEscritura : public Cola {
 		FifoEscritura fifo;
 
 	public:
-		ColaEscritura(std::string semPath, std::string fifoPath) : Cola(semPath), fifo(fifoPath){
-			if(fifo.abrir())
+		ColaEscritura(std::string semPath, std::string fifoPath, int semnum = 0, int semcant = 1) : Cola(semPath, semnum, semcant), fifo(fifoPath){
+			if(fifo.open())
 				throw std::string("No se pudo abrir fifo");
 		}
 
 		~ColaEscritura(){
-			if(fifo.cerrar())
+			if(fifo.close())
 				throw std::string("No se pudo cerrar fifo");
 		}
 
@@ -46,19 +46,12 @@ template <typename T> class ColaEscritura : public Cola {
 		int write(T* buf){
 			int ret = 0;
 
-			if((ret = fifo.escribir((void*) buf, sizeof(T))) <= 0)
+			if((ret = fifo.write((void*) buf, sizeof(T))) <= 0)
 				return ret;
 
-			Logger::log("decremento semaforo: prev val %d", sem.getVal());
-			if((ret = sem.p(1, IPC_NOWAIT))){
-				//return ret;
-				ret = 0;
-			}
+			sem.p(1, IPC_NOWAIT);
 
-			sleep(1);
-			Logger::log("pos val %d", sem.getVal());
-
-			return ret;
+			return 0;
 		}
 };
 
@@ -68,23 +61,25 @@ template <typename T> class ColaLectura : public Cola {
 		FifoLectura fifo;
 
 	public:
-		ColaLectura(std::string semPath, std::string fifoPath) : Cola(semPath), fifo(fifoPath){
+		ColaLectura(std::string semPath, std::string fifoPath, int semnum = 0, int semcant = 1) : Cola(semPath, semnum, semcant), fifo(fifoPath){
 			if(sem.setVal(1))
 				throw std::string("No se pudo setear el semaforo");
 
-			Logger::log("valor sem %d", sem.getVal());
+			fifo.unlink();
 
-			if(fifo.abrir())
+			if(fifo.mknod())
+				throw std::string("Error con mknod");
+
+			if(fifo.open())
 				throw std::string("No se pudo abrir fifo");
 
-			Logger::log("abri la fifo");
 		}
 
 		~ColaLectura(){
-			if(fifo.cerrar())
+			if(fifo.close())
 				throw std::string("No se pudo cerrar fifo");
 
-			if(fifo.eliminar())
+			if(fifo.unlink())
 				throw std::string("No se pudo eliminar fifo");
 		}
 
@@ -96,21 +91,18 @@ template <typename T> class ColaLectura : public Cola {
 			if(!dst)
 				return -1;
 
-			ssize_t size = sizeof(T);
-			ssize_t bytesLeidos = fifo.leer(dst, size);
+			ssize_t size = sizeof(T),
+				bytesLeidos = fifo.read(dst, size);
+
 			if(bytesLeidos == size)
 				return 0;
 
 			if(bytesLeidos == 0){
-				Logger::log("incremento semaforo prev val %d", sem.getVal());
 				if(sem.v())
 					return -1;
-				Logger::log("pos val %d", sem.getVal());
 				sem.wait();
 				return read(dst);
 			}
-
-			Logger::log("bytesLeidos %d size %d *dst %d EOF %d", bytesLeidos, size, (char) *dst, EOF);
 
 			return -1;
 		}

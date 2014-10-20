@@ -3,19 +3,18 @@
 
 using std::string;
 
-Fifo::Fifo(const std::string nombre, bool erase) : nombre(nombre), fd(-1) {
-	if(erase)
-		unlink(nombre.c_str());
-	if(mknod(static_cast<const char*>(nombre.c_str()), S_IFIFO | 0666, 0)){
-		//throw string("Error con mknod");
-	}
+Fifo::Fifo(const std::string nombre) : nombre(nombre), fd(-1) {
 }
 
 Fifo::~Fifo() {
 }
 
-int Fifo::cerrar() {
-	if(close(fd))
+int Fifo::mknod() {
+	return ::mknod(static_cast<const char*>(nombre.c_str()), S_IFIFO | 0666, 0);
+}
+
+int Fifo::close() {
+	if(::close(fd))
 		return -1;
 
 	fd = -1;
@@ -23,6 +22,6 @@ int Fifo::cerrar() {
 	return 0;
 }
 
-int Fifo::eliminar() const {
-	return unlink(nombre.c_str());
+int Fifo::unlink() const {
+	return ::unlink(nombre.c_str());
 }

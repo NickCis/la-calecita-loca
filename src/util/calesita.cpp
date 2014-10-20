@@ -5,11 +5,19 @@
 #include "../util/fifo_escritura.h"
 #include "../util/logger.h"
 
-Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), exitLock(SALIDA_LOCK), dentroCalesita(CALESITA_SEM, 0, 2), kidsOut(CALESITA_SEM, 1, 2)  {
+using std::string;
+using std::unique_ptr;
+
+Calesita::Calesita() : shm(NULL), size(0), cantidadPosiciones(0), lock(POSICIONES_CALESITA), posiciones(NULL), exitLock(SALIDA_LOCK)  {
 	this->cantidadPosiciones = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS);
 	this->size = sizeof(pid_t) * this->cantidadPosiciones;
 	this->shm = new MemoriaCompartida3<pid_t>(POSICIONES_CALESITA, POSICIONES_CALESITA_CHAR, this->size);
 	this->posiciones = new pid_t[this->cantidadPosiciones];
+
+	string binPath = Config::getBinPath(CALESITA_BIN);
+
+	dentroCalesita = unique_ptr<Semaforo> (new Semaforo(binPath, (int) CalesitaSemaforos::dentroCalesita, (int) CalesitaSemaforos::totalSemaforos));
+	kidsOut = unique_ptr<Semaforo> (new Semaforo(binPath, (int) CalesitaSemaforos::kidsOut, (int) CalesitaSemaforos::totalSemaforos));
 }
 
 Calesita::~Calesita() {
@@ -17,19 +25,11 @@ Calesita::~Calesita() {
 	delete[] this->posiciones;
 }
 
-int Calesita::tomarLock(){
-	return this->lock.tomarLock();
-}
-
-int Calesita::liberarLock(){
-	return this->lock.liberarLock();
-}
-
 CalesitaUsuario::CalesitaUsuario(){
 }
 
 CalesitaUsuario::~CalesitaUsuario(){
-	kidsOut.p();
+	kidsOut->p();
 }
 
 int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
@@ -39,7 +39,7 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 
 	pos = pos % this->cantidadPosiciones;
 
-	if(this->tomarLock())
+	if(this->lock.tomarLock())
 		return -1;
 
 	this->shm->leer(this->posiciones);
@@ -58,13 +58,13 @@ int CalesitaUsuario::ocuparPosicion(int pos){ //TODO: checkear errores
 
 	Logger::log("Entre a la calesita y ocupe la posicion %d.", pos);
 
-	if(this->liberarLock())
+	if(this->lock.liberarLock())
 		return -1;
 
-	if(kidsOut.v())
+	if(kidsOut->v())
 		return -1;
 
-	if(this->dentroCalesita.p())
+	if(this->dentroCalesita->p())
 		return -1;
 
 	return pos;
@@ -87,19 +87,19 @@ CalesitaControlador::CalesitaControlador(){
 }
 
 CalesitaControlador::~CalesitaControlador(){
-	dentroCalesita.eliminar();
-	kidsOut.eliminar();
+	dentroCalesita->eliminar();
+	kidsOut->eliminar();
 }
 
 int CalesitaControlador::clear(){
 	int ret = 0;
-	if((ret = this->tomarLock()))
+	if((ret = this->lock.tomarLock()))
 		return ret;
 	Logger::log("Limpio la SHM de calesita");
 	memset(this->posiciones, 0, this->size);
 	this->shm->escribir(this->posiciones); //TODO: Fijarse si esto puede salir con error
 
-	if((ret = this->liberarLock()))
+	if((ret = this->lock.liberarLock()))
 		return ret;
 
 	return ret;
@@ -110,7 +110,7 @@ int CalesitaControlador::esperarEntradaChicos(){
 
 	Logger::log("Espero a que entren los chicos.");
 
-	if((ret = dentroCalesita.wait()))
+	if((ret = dentroCalesita->wait()))
 		return ret;
 
 	Logger::log("Ya entraron todos los chicos.");
@@ -123,7 +123,7 @@ int CalesitaControlador::inicializarNuevaVuelta(int cantChicos){
 		return ret;
 
 	Logger::log("Van a entrar %d chicos", cantChicos);
-	if((ret = dentroCalesita.setVal(cantChicos)))
+	if((ret = dentroCalesita->setVal(cantChicos)))
 		return ret;
 
 	Logger::log("Limpio calesita");
@@ -148,7 +148,7 @@ int CalesitaControlador::darVuelta(){
 int CalesitaControlador::esperarSalidaChicos(){
 	int ret = 0;
 	Logger::log("Espero salida de los chicos");
-	if((ret = kidsOut.wait()))
+	if((ret = kidsOut->wait()))
 		return ret;
 
 	Logger::log("Salieron todos los chicos");

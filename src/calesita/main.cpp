@@ -4,6 +4,7 @@
 #include "../util/defines.h"
 #include "../util/env_config.h"
 #include "../util/calesita.h"
+#include "../util/cola.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -11,82 +12,61 @@
 
 #include <vector>
 #include <sstream>
+#include <memory>
 
 using std::vector;
 using std::string;
+using std::unique_ptr;
 using std::stringstream;
 
-int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
+int main(int argc __attribute__ ((unused)), char* argv[]){
 	Logger::setName(argv[0]);
 	pid_t myPid = getpid();
 
-	try {
-		int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
-			cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
+	int cant_asientos = Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS),
+		cant_chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS),
+		cantidad = 0;
 
-		Logger::log("Inicio: cantidad de asientos: %d cantidad de chicos: %d", cant_asientos, cant_chicos);
+	Logger::log("Inicio: cantidad de asientos: %d cantidad de chicos: %d", cant_asientos, cant_chicos);
 
-		FifoLectura fila(QUEUE_FIFO);
-		fila.abrir(true);
-		ssize_t bytesLeidos;
+	CREATE_UNIQUE_PTR(colaCalesita, ColaLectura<pid_t>, new ColaLectura<pid_t>(Config::getBinPath(CALESITA_BIN), QUEUE_CALESITA_FIFO, (int) CalesitaSemaforos::colaCalesita, (int) CalesitaSemaforos::totalSemaforos));
 
-		int cantidad = 0;
+	pid_t kid;
 
-		pid_t kid;
-		vector<pid_t> kids;
+	CREATE_UNIQUE_PTR(calesita, CalesitaControlador, new CalesitaControlador());
 
-		CalesitaControlador calesita;
-		for(;;){
-			bytesLeidos = fila.leer(static_cast<void*> (&kid), sizeof(pid_t));
-			if(bytesLeidos != sizeof(pid_t)){
-				continue;
-			}
+	EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(cantidad));
 
-			Logger::log("chico hace la cola %d", kid);
+	for(;;){
+		EXIT_ON_TRUE(colaCalesita->read(&kid));
 
-			kids.push_back(kid);
+		Logger::log("chico [%d] hace la cola", kid);
 
-			if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
+		stringstream ss;
+		ss << KID_FIFO << kid;
+		FifoEscritura chico(ss.str());
+		chico.open();
+		chico.write(static_cast<const void*> (&myPid), sizeof(pid_t));
+		chico.close();
 
-				Logger::log("estan todos los chicos para entrar");
-				EXIT_ON_TRUE(calesita.inicializarNuevaVuelta(cantidad));
+		Logger::log("dejo entrar a chico  [%d]", kid);
 
-				Logger::log("Dejo entrar a los chicos");
+		if(++cantidad >= cant_asientos || cantidad >= cant_chicos){
+			EXIT_ON_TRUE(calesita->esperarEntradaChicos());
 
-				for(vector<pid_t>::iterator it = kids.begin(); it != kids.end(); ++it){
-					pid_t kidPid = (*it);
-					stringstream ss;
-					ss << KID_FIFO << kidPid;
-					FifoEscritura chico(ss.str());
-					chico.abrir();
-					chico.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
-					chico.cerrar();
-				}
+			EXIT_ON_TRUE(calesita->darVuelta());
 
-				EXIT_ON_TRUE(calesita.esperarEntradaChicos());
+			EXIT_ON_TRUE(calesita->esperarSalidaChicos());
 
-				EXIT_ON_TRUE(calesita.darVuelta());
+			cant_chicos -= cantidad;
+			if(cant_chicos == 0)
+				break;
+			cantidad = 0;
 
-				EXIT_ON_TRUE(calesita.esperarSalidaChicos());
-
-				cant_chicos -= cantidad;
-				if(cant_chicos == 0)
-					break;
-				cantidad = 0;
-				kids.clear();
-			}
+			EXIT_ON_TRUE(calesita->inicializarNuevaVuelta(cantidad));
 		}
-
-		fila.cerrar();
-		fila.eliminar();
-
-		Logger::log("Ya todos los chicos se divirtieron en mi. Salgo.");
-	} catch(string &str){
-		Logger::log("Exepcion: %s", str.c_str());
-		return -1;
-	} catch(...){
-		Logger::log("Exepcion");
-		return -1;
 	}
+
+	Logger::log("Ya todos los chicos se divirtieron en mi. Salgo.");
 	return 0;
 }

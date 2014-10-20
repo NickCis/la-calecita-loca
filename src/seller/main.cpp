@@ -11,60 +11,54 @@
 
 #include <string>
 #include <sstream>
+#include <memory>
 
 using std::string;
+using std::unique_ptr;
 using std::stringstream;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::setName(argv[0]);
-	try {
-		int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
-			chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS);
 
-		Logger::log("Inicio: costo de entrada: %d cantidad de chicos: %d", ticket_cost, chicos);
-		pid_t myPid = getpid();
-		pid_t kidPid = 0;
+	int ticket_cost = Config::getInt(ENVIROMENT_TICKET_COST, DEFAULT_TICKET_COST),
+		chicos = Config::getInt(ENVIROMENT_CANT_CHICOS, DEFAULT_CANT_CHICOS),
+		recaudacion = 0;
 
-		LockFile lock(MONEY_BOX);
-		int recaudacion = 0;
+	Logger::log("Inicio: costo de entrada: %d cantidad de chicos: %d", ticket_cost, chicos);
+	pid_t myPid = getpid();
+	pid_t kidPid = 0;
 
-		MemoriaCompartida2<int> box(MONEY_BOX, MONEY_BOX_CHAR);
-		lock.tomarLock();
-		box.escribir(recaudacion);
-		lock.liberarLock();
+	CREATE_UNIQUE_PTR(lock, LockFile, new LockFile(MONEY_BOX));
 
-		ColaLectura<pid_t> colaTickets(SELLER_SEM, SELLER_FIFO);
+	CREATE_UNIQUE_PTR(box, MemoriaCompartida2<int>, new MemoriaCompartida2<int>(MONEY_BOX, MONEY_BOX_CHAR));
 
+	lock->tomarLock();
+	box->escribir(recaudacion);
+	lock->liberarLock();
 
-		for(int i=0;i<chicos;i++){
-			EXIT_ON_TRUE(colaTickets.read(&kidPid));
+	CREATE_UNIQUE_PTR(colaTickets, ColaLectura<pid_t>, new ColaLectura<pid_t>(SELLER_SEM, SELLER_FIFO));
 
-			Logger::log("Chico %d quiere comprar una entrada", kidPid);
+	for(int i=0;i<chicos;i++){
+		EXIT_ON_TRUE(colaTickets->read(&kidPid));
 
-			lock.tomarLock();
-			recaudacion += ticket_cost;
-			box.escribir(recaudacion);
-			lock.liberarLock();
+		Logger::log("Chico %d quiere comprar una entrada", kidPid);
 
-			stringstream ss;
-			ss << KID_FIFO << kidPid;
-			FifoEscritura chico(ss.str());
-			chico.abrir();
-			chico.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
-			chico.cerrar();
+		lock->tomarLock();
+		recaudacion += ticket_cost;
+		box->escribir(recaudacion);
+		lock->liberarLock();
 
-			Logger::log("chico %d le vendi una entrada", kidPid);
-		}
+		stringstream ss;
+		ss << KID_FIFO << kidPid;
+		FifoEscritura chico(ss.str());
+		chico.open();
+		chico.write(static_cast<const void*> (&myPid), sizeof(pid_t));
+		chico.close();
 
-		Logger::log("Vendi todas las entradas");
-	} catch(string &str){
-		Logger::log("Exepcion: %s", str.c_str());
-		return -1;
-	} catch(...){
-		Logger::log("Exepcion");
-		return -1;
+		Logger::log("chico %d le vendi una entrada", kidPid);
 	}
 
+	Logger::log("Vendi todas las entradas");
 	Logger::log("Exit");
 	return 0;
 }

@@ -1,72 +1,69 @@
 #include "../util/logger.h"
+#include "../util/env_config.h"
 #include "../util/fifo_escritura.h"
 #include "../util/fifo_lectura.h"
 #include "../util/defines.h"
 #include "../util/calesita.h"
 #include "../util/cola.h"
 #include <unistd.h>
+#include <errno.h>
 
 #include <sstream>
+#include <memory>
 
 using std::string;
+using std::unique_ptr;
 using std::stringstream;
 
-int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
+int main(int argc __attribute__ ((unused)), char* argv[]){
 	Logger::setName(argv[0]);
 	Logger::log("Inicio");
 
-	try{
-		pid_t myPid = getpid();
+	pid_t myPid = getpid(),
+		otherPid;
+	stringstream ss;
+	ss << KID_FIFO << myPid;
 
-		stringstream ss;
-		ss << KID_FIFO << myPid;
+	int posicionDeseada = 3;
 
-		int posicionDeseada = 3;
+	CREATE_UNIQUE_PTR(kidIn, FifoLectura, new FifoLectura(ss.str()));
+	kidIn->unlink();
 
-		ColaEscritura<pid_t> colaTickets(SELLER_SEM, SELLER_FIFO);
-		EXIT_ON_TRUE(colaTickets.write(&myPid));
+	CREATE_UNIQUE_PTR(colaTickets, ColaEscritura<pid_t>, new ColaEscritura<pid_t>(SELLER_SEM, SELLER_FIFO));
 
-		Logger::log("compro entrada");
+	EXIT_ON_TRUE(colaTickets->write(&myPid));
 
-		pid_t otherPid;
-		FifoLectura kidIn(ss.str());
-		kidIn.abrir(true);
+	Logger::log("Hago fila para comprar entrada");
 
-		ssize_t bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
-		if(bytesLeidos != sizeof(pid_t)){
-			Logger::log(" error comprando la entrada");
-			return -1;
-		}
-		
-		Logger::log("Hago la fila para la calesita");
+	EXIT_ON_TRUE(kidIn->mknod());
+	EXIT_ON_TRUE(kidIn->open());
+	EXIT_ON_TRUE_EXE(kidIn->read(static_cast<void*> (&otherPid), sizeof(pid_t)) != sizeof(pid_t), {
+		Logger::log("errno %d '%s'", errno, strerror(errno));
+	});
+	EXIT_ON_TRUE(kidIn->close());
+	EXIT_ON_TRUE(kidIn->unlink());
 
-		FifoEscritura queue(QUEUE_FIFO);
-		queue.abrir();
-		queue.escribir(static_cast<const void*> (&myPid), sizeof(pid_t));
-		queue.cerrar();
+	Logger::log("Compre entrada");
 
-		Logger::log("Espero a la calesita");
+	Logger::log("Hago la fila para la calesita");
 
-		bytesLeidos = kidIn.leer(static_cast<void*> (&otherPid), sizeof(pid_t));
-		if(bytesLeidos != sizeof(pid_t)){
-			Logger::log("error esperando a la calesita");
-			return -1;
-		}
+	CREATE_UNIQUE_PTR(colaCalesita, ColaEscritura<pid_t>, new ColaEscritura<pid_t>(Config::getBinPath(CALESITA_BIN), QUEUE_CALESITA_FIFO, (int) CalesitaSemaforos::colaCalesita, (int) CalesitaSemaforos::totalSemaforos));
+	EXIT_ON_TRUE(colaCalesita->write(&myPid));
 
-		CalesitaUsuario calesita;
-		EXIT_ON_TRUE(calesita.ocuparPosicion(posicionDeseada) < 0);
+	EXIT_ON_TRUE(kidIn->mknod());
+	EXIT_ON_TRUE(kidIn->open());
+	EXIT_ON_TRUE(kidIn->read(static_cast<void*> (&otherPid), sizeof(pid_t)) != sizeof(pid_t));
+	EXIT_ON_TRUE(kidIn->close());
+	EXIT_ON_TRUE(kidIn->unlink());
 
-		EXIT_ON_TRUE(calesita.divertirme());
+	Logger::log("Entro a la calesita");
 
-		kidIn.cerrar();
-		kidIn.eliminar();
-	} catch(string &str){
-		Logger::log("Exepcion: %s", str.c_str());
-		return -1;
-	} catch(...){
-		Logger::log("Exepcion");
-		return -1;
-	}
+	CREATE_UNIQUE_PTR(calesita, CalesitaUsuario, new CalesitaUsuario());
+
+	EXIT_ON_TRUE(calesita->ocuparPosicion(posicionDeseada) < 0);
+
+	EXIT_ON_TRUE(calesita->divertirme());
+
 	Logger::log("End");
 	return 0;
 }

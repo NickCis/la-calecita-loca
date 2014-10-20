@@ -13,9 +13,11 @@ private:
 	/** Estructura que describe la forma de lock.
 	 */
 	struct flock fl;
+
 	/** File descriptor del archivo de lock
 	 */
 	int fd;
+
 	/** Path del archivo
 	 */
 	std::string nombre;
@@ -24,7 +26,7 @@ public:
 	/** Constructor de LockFile.
 	 * @param nombre: path del archivo a usar de lock
 	 */
-	LockFile ( const std::string nombre );
+	LockFile(const std::string &nombre);
 	~LockFile();
 
 	/** Toma el lock del archivo.
@@ -32,18 +34,18 @@ public:
 	 * @param write: si es verdadero toma el lock como escritura.
 	 * @return salida de fcntl
 	 */
-	int tomarLock (bool write = true);
+	int tomarLock(bool write = true);
 
 	/** Libera lock
 	 */
-	int liberarLock ();
+	int liberarLock();
 
 	/** Escribe en el archivo.
 	 * @param buffer: buffer que se quiere escribir
 	 * @param buffsize: tama~no del buffer que se quiere escribir
 	 * @return tama~no que se escribio realmente
 	 */
-	ssize_t escribir ( const void* buffer,const ssize_t buffsize ) const;
+	ssize_t escribir(const void* buffer, const ssize_t buffsize) const;
 };
 
 #endif /* LOCKFILE_H_ */
