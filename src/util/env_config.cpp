@@ -81,3 +81,8 @@ string Config::buildKidFifoPath(pid_t kid){
 	ss << KID_FIFO << kid;
 	return ss.str();
 }
+
+int Config::randomNumber(int max){
+	srand(time(NULL));
+	return rand() % max;
+}

@@ -2,7 +2,7 @@
 #include "../util/defines.h"
 #include <unistd.h>
 #include "../util/lock_file.h"
-#include "../util/memoria_compartida2.h"
+#include "../util/memoria_compartida.h"
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::setName(argv[0]);
@@ -10,7 +10,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	LockFile lock(MONEY_BOX);
 
-	MemoriaCompartida2<int> box(MONEY_BOX, MONEY_BOX_CHAR);
+	MemoriaCompartida<int> box(MONEY_BOX);
 	lock.tomarLock();
 	int recaudacion = box.leer();
 	lock.liberarLock();

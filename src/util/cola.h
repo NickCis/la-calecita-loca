@@ -34,8 +34,7 @@ template <typename T> class ColaEscritura : public Cola {
 		}
 
 		~ColaEscritura(){
-			if(fifo.close())
-				throw std::string("No se pudo cerrar fifo");
+			fifo.close();
 		}
 
 		/** Escribe en la cola
@@ -76,11 +75,9 @@ template <typename T> class ColaLectura : public Cola {
 		}
 
 		~ColaLectura(){
-			if(fifo.close())
-				throw std::string("No se pudo cerrar fifo");
-
-			if(fifo.unlink())
-				throw std::string("No se pudo eliminar fifo");
+			fifo.close();
+			fifo.unlink();
+			sem.eliminar();
 		}
 
 		/** Lee de la cola. Si no hay nada para leer espera a que algo halla

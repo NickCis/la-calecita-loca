@@ -31,10 +31,26 @@ ssize_t LockFile::write(const void* buffer, const ssize_t buffsize, off_t offset
 }
 
 LockFile::~LockFile(){
-	::close(this->fd);
+	close();
 }
 
 ssize_t LockFile::read(void* buffer, const ssize_t buffsize, off_t offset, int whence){
 	lseek(this->fd, offset, whence);
 	return ::read(this->fd, buffer, buffsize);
+}
+
+int LockFile::close() {
+	if(this->fd < 0)
+		return 0;
+
+	if(::close(fd))
+		return -1;
+
+	fd = -1;
+
+	return 0;
+}
+
+int LockFile::unlink(){
+	return ::unlink(nombre.c_str());
 }

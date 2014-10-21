@@ -97,7 +97,12 @@ CalesitaControlador::CalesitaControlador(){
 }
 
 CalesitaControlador::~CalesitaControlador(){
-	dentroCalesita->eliminar();
+	posicionesLock.close();
+	posicionesLock.unlink();
+
+	exitLock.close();
+	exitLock.unlink();
+
 	kidsOut->eliminar();
 }
 

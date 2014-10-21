@@ -5,7 +5,6 @@
 
 #include "lock_file.h"
 #include "semaforo.h"
-#include "memoria_compartida3.h"
 
 #include <memory>
 

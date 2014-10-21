@@ -7,6 +7,7 @@
 #include "../util/cola.h"
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 #include <memory>
 
@@ -20,7 +21,7 @@ int main(int argc __attribute__ ((unused)), char* argv[]){
 	pid_t myPid = getpid(),
 		otherPid;
 
-	int posicionDeseada = 3;
+	int posicionDeseada = Config::randomNumber(Config::getInt(ENVIROMENT_CANT_ASIENTOS, DEFAULT_CANT_ASIENTOS));
 
 	CREATE_UNIQUE_PTR(kidIn, FifoLectura, new FifoLectura(Config::buildKidFifoPath(myPid)));
 	kidIn->unlink();

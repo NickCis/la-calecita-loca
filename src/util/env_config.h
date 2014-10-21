@@ -31,5 +31,11 @@ namespace Config {
 	 */
 	std::string buildKidFifoPath(pid_t kid);
 
+	/** Devuelve un numero aleatorio
+	 * @param maximo numero, se hace modulo de este
+	 * @return numero aleatorio
+	 */
+	int randomNumber(int max=100);
+
 }
 #endif

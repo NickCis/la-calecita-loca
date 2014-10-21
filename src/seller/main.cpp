@@ -3,7 +3,7 @@
 #include "../util/fifo_escritura.h"
 #include "../util/defines.h"
 #include "../util/lock_file.h"
-#include "../util/memoria_compartida2.h"
+#include "../util/memoria_compartida.h"
 #include "../util/env_config.h"
 #include "../util/cola.h"
 
@@ -29,7 +29,7 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 	CREATE_UNIQUE_PTR(lock, LockFile, new LockFile(MONEY_BOX));
 
-	CREATE_UNIQUE_PTR(box, MemoriaCompartida2<int>, new MemoriaCompartida2<int>(MONEY_BOX, MONEY_BOX_CHAR));
+	CREATE_UNIQUE_PTR(box, MemoriaCompartida<int>, new MemoriaCompartida<int>(MONEY_BOX));
 
 	lock->tomarLock();
 	box->escribir(recaudacion);
@@ -61,6 +61,9 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 		Logger::log("chico [%d] le vendi una entrada", kidPid);
 	}
+
+	lock->close();
+	lock->unlink();
 
 	Logger::log("Vendi todas las entradas");
 	Logger::log("Exit");

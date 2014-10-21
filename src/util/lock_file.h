@@ -60,6 +60,16 @@ public:
 	 * @return tama~no que se escribio realmente
 	 */
 	ssize_t read(void* buffer, const ssize_t buffsize, off_t offset=0, int whence=SEEK_SET);
+
+	/** Cierra el archivo (realiza close)
+	 * @return 0 bien, resto error
+	 */
+	int close();
+
+	/** Elimina el archivo, (realiza unlink)
+	 * @return 0 bien, resto error
+	 */
+	int unlink();
 };
 
 #endif /* LOCKFILE_H_ */

@@ -3,13 +3,11 @@
 #include <unistd.h>
 
 #define SELLER_FIFO "/tmp/seller_fifo" // -> Path de archivo fifo que leera el vendedor
-#define MONEY_BOX "/tmp/money.box" // -> Path de SHM para guardar la recaudacion
-#define MONEY_BOX_CHAR 'A' // -> Letra de la SHM donde se guarda la recaudacion
 #define QUEUE_CALESITA_FIFO "/tmp/queue_calesita_fifo" // -> Path de archivo fifo que leera la calesita (Cola que hacen los chicos para entrar)
 #define QUEUE_CALESITA_SEM "/tmp/queue_calesita_sem"
 #define KID_FIFO "/tmp/kid_fifo_" // -> Path de archivo fifo que leen los chicos
-#define POSICIONES_CALESITA "/tmp/calesita.pos" // -> Path de SHM donde se guardan las posiciones de la calesita
-#define POSICIONES_CALESITA_CHAR 'A' // -> Letra de la SHM donde se guardan las posiciones de la calesita
+#define POSICIONES_CALESITA "/tmp/calesita.pos" // -> Path del archivo donde se guardan las posiciones de la calesita
+#define MONEY_BOX "/tmp/money_box"
 
 #define CALESITA_BIN "calesita"
 #define SELLER_BIN "seller"
