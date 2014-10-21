@@ -13,16 +13,6 @@ class Cola {
 		~Cola(){}
 };
 
-class ColaPrinter : public Cola {
-	public:
-		int getVal(){
-			return sem.getVal();
-		}
-
-		ColaPrinter(std::string semPath) : Cola(semPath){
-		}
-};
-
 template <typename T> class ColaEscritura : public Cola {
 	protected:
 		FifoEscritura fifo;
