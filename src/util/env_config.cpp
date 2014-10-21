@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <libgen.h>
+#include <sys/time.h>
 
 #include <sstream>
 
@@ -83,6 +84,8 @@ string Config::buildKidFifoPath(pid_t kid){
 }
 
 int Config::randomNumber(int max){
-	srand(time(NULL));
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	srand(time(NULL)+getpid()+tv.tv_usec);
 	return rand() % max;
 }
