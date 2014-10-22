@@ -4,14 +4,14 @@
 
 #define SELLER_FIFO "/tmp/seller_fifo" // -> Path de archivo fifo que leera el vendedor
 #define QUEUE_CALESITA_FIFO "/tmp/queue_calesita_fifo" // -> Path de archivo fifo que leera la calesita (Cola que hacen los chicos para entrar)
-#define QUEUE_CALESITA_SEM "/tmp/queue_calesita_sem"
 #define KID_FIFO "/tmp/kid_fifo_" // -> Path de archivo fifo que leen los chicos
 #define POSICIONES_CALESITA "/tmp/calesita.pos" // -> Path del archivo donde se guardan las posiciones de la calesita
-#define MONEY_BOX "/tmp/money_box"
+#define MONEY_BOX_LOCK "/tmp/money_box.lock" // -> Path del archivo lock para la moneybox
 
 #define CALESITA_BIN "calesita"
 #define SELLER_BIN "seller"
 #define KID_BIN "kid"
+#define LAUNCHER_BIN "launcher"
 
 #define SALIDA_LOCK "/tmp/salida.lock" // -> Path de lock file que se usa para controlar la salida a la calesita
 

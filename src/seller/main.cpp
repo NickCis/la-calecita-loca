@@ -2,10 +2,9 @@
 #include "../util/fifo_lectura.h"
 #include "../util/fifo_escritura.h"
 #include "../util/defines.h"
-#include "../util/lock_file.h"
-#include "../util/memoria_compartida.h"
 #include "../util/env_config.h"
 #include "../util/cola.h"
+#include "../util/money_box.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -27,13 +26,14 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 	pid_t myPid = getpid();
 	pid_t kidPid = 0;
 
-	CREATE_UNIQUE_PTR(lock, LockFile, new LockFile(MONEY_BOX));
+	CREATE_UNIQUE_PTR(box, MoneyBox, new MoneyBox());
 
-	CREATE_UNIQUE_PTR(box, MemoriaCompartida<int>, new MemoriaCompartida<int>(MONEY_BOX));
+	box->write(recaudacion);
 
-	lock->tomarLock();
-	box->escribir(recaudacion);
-	lock->liberarLock();
+	{
+		CREATE_UNIQUE_PTR(semInit, Semaforo, new Semaforo(Config::getBinPath(LAUNCHER_BIN)));
+		semInit->p(1, IPC_NOWAIT);
+	}
 
 	CREATE_UNIQUE_PTR(colaTickets, ColaLectura<pid_t>, new ColaLectura<pid_t>(Config::getBinPath(SELLER_BIN), SELLER_FIFO));
 
@@ -42,11 +42,9 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 		Logger::log("Chico [%d] quiere comprar una entrada", kidPid);
 
-		lock->tomarLock();
 		recaudacion += ticket_cost;
-		box->escribir(recaudacion);
+		box->write(recaudacion);
 		Logger::log("Recaudacion %d", recaudacion);
-		lock->liberarLock();
 
 		FifoEscritura chico(Config::buildKidFifoPath(kidPid));
 		EXIT_ON_TRUE_EXE(chico.mknod() && errno != EEXIST, {
@@ -61,9 +59,6 @@ int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused
 
 		Logger::log("chico [%d] le vendi una entrada", kidPid);
 	}
-
-	lock->close();
-	lock->unlink();
 
 	Logger::log("Vendi todas las entradas");
 	Logger::log("Exit");

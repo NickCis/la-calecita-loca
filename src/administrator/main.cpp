@@ -1,19 +1,21 @@
 #include "../util/logger.h"
 #include "../util/defines.h"
+#include "../util/money_box.h"
+
 #include <unistd.h>
-#include "../util/lock_file.h"
-#include "../util/memoria_compartida.h"
+
+#include <memory>
+#include <string>
+
+using std::string;
+using std::unique_ptr;
 
 int main( int argc __attribute__ ((unused)), char* argv[] __attribute__ ((unused))){
 	Logger::setName(argv[0]);
 	Logger::log("Inicio");
 
-	LockFile lock(MONEY_BOX);
-
-	MemoriaCompartida<int> box(MONEY_BOX);
-	lock.tomarLock();
-	int recaudacion = box.leer();
-	lock.liberarLock();
+	CREATE_UNIQUE_PTR(box, MoneyBox, new MoneyBox());
+	int recaudacion = box->read();
 
 	Logger::log("Recaudacion %d", recaudacion);
 	Logger::log("Salgo");

@@ -31,6 +31,11 @@ int main(int argc __attribute__ ((unused)), char* argv[]){
 
 	Logger::log("Inicio: cantidad de asientos: %d cantidad de chicos: %d", cant_asientos, cant_chicos);
 
+	{
+		CREATE_UNIQUE_PTR(semInit, Semaforo, new Semaforo(Config::getBinPath(LAUNCHER_BIN)));
+		semInit->p(1, IPC_NOWAIT);
+	}
+
 	CREATE_UNIQUE_PTR(colaCalesita, ColaLectura<pid_t>, new ColaLectura<pid_t>(Config::getBinPath(CALESITA_BIN), QUEUE_CALESITA_FIFO, (int) CalesitaSemaforos::colaCalesita, (int) CalesitaSemaforos::totalSemaforos));
 
 	pid_t kid;

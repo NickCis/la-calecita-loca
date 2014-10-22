@@ -9,7 +9,7 @@ LockFile::LockFile(const string &nombre){
 	this->fd = open(this->nombre.c_str(), O_CREAT | O_RDWR, 0777);
 
 	if(this->fd == -1)
-		throw string(__func__)+string(" :: error creando fd file: ");
+		throw string(__func__)+string(" :: error creando fd file: ")+this->nombre;
 }
 
 int LockFile::tomarLock(int len, int start, int whence, int type) {
