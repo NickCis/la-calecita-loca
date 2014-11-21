@@ -30,7 +30,7 @@ $(BIN_PATH)/%: $(UTIL) $(OBJECTS)
 	$(CC) $(SRC_PATH)/$(@F)/main.o $(UTIL) $(CFLAGS) -o $@ $(LDFLAGS)
 
 clean:
-	- $(RM) $(SRC_PATH)/*.o $(SRC_PATH)/*/*.o
+	- $(RM) $(SRC_PATH)/*/*.o
 	- $(RM) -r $(BIN_PATH)
 
 %.o: %.cpp

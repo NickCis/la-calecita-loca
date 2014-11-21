@@ -36,6 +36,12 @@ void close_file();
  */
 int insert_reg(const Register *reg);
 
+/** Actualiza un registro de la base de datos
+ * @param reg [in] se usa el name para buscar, y el resto de los datos para actualizar
+ * @return == -1 error, 0 ok, 1 no encontro
+ */
+int update_reg(const Register *reg);
+
 /** Borra un registro de la base de datos
  * @param reg [in] se usa el name para buscar
  * @return == -1 error, 0 ok, 1 no encontro
@@ -54,7 +60,7 @@ int open_file(){
 
 	fd = open(DATA_PATH, O_CREAT | O_RDWR, 0666);
 	if(fd == -1){
-		printf("Error :: open(DATA_PATH='%s', O_CREAT | O_RDWR, 0666) :: errno %d '%s'\n", DATA_PATH, errno, strerror(errno));
+		printf("Error :: %s :: open(DATA_PATH='%s', O_CREAT | O_RDWR, 0666) :: errno %d '%s'\n", __func__, DATA_PATH, errno, strerror(errno));
 		return -1;
 	}
 
@@ -66,7 +72,7 @@ void close_file(){
 		return;
 
 	if(close(fd) == -1)
-		printf("Error :: close(fd=%d) :: errno %d '%s'\n", fd, errno, strerror(errno));
+		printf("Error :: %s :: close(fd=%d) :: errno %d '%s'\n", __func__, fd, errno, strerror(errno));
 }
 
 int insert_reg(const Register *reg){
@@ -80,7 +86,32 @@ int insert_reg(const Register *reg){
 
 	file_reg.valid = 1;
 	if(write(fd, &file_reg, sizeof(FileRegister)) != sizeof(FileRegister)){
-		printf("Error :: write(fd=%d, &file_reg=%p, sizeof(FileRegister)=%d) != sizeof(FileRegister) :: errno %d '%s'\n", fd, &file_reg, sizeof(FileRegister), errno, strerror(errno));
+		printf("Error :: %s :: write(fd=%d, &file_reg=%p, sizeof(FileRegister)=%d) != sizeof(FileRegister) :: errno %d '%s'\n", __func__, fd, &file_reg, sizeof(FileRegister), errno, strerror(errno));
+		return -1;
+	}
+
+	return 0;
+}
+
+int update_reg(const Register *reg){
+	int ret;
+
+	FileRegister file_reg;
+	memcpy((void*) &file_reg.reg, (void*) reg, sizeof(Register));
+
+	if((ret = select_reg(&file_reg.reg)))
+		return ret;
+
+	if(lseek(fd, -sizeof(FileRegister), SEEK_CUR) == -1){
+		printf("Error :: %s :: lseek(fd=%d, -sizeof(FileRegister)=%d, SEEK_CUR) :: errno %d '%s'\n", __func__, fd, -sizeof(FileRegister), errno, strerror(errno));
+		return -1;
+	}
+
+	memcpy((void*) &file_reg.reg, (void*) reg, sizeof(Register));
+	file_reg.valid = 1;
+
+	if(write(fd, &file_reg, sizeof(FileRegister)) != sizeof(FileRegister)){
+		printf("Error :: %s :: write(fd=%d, &file_reg=%p, sizeof(FileRegister)=%d) != sizeof(FileRegister) :: errno %d '%s'\n", __func__, fd, &file_reg, sizeof(FileRegister), errno, strerror(errno));
 		return -1;
 	}
 
@@ -97,14 +128,14 @@ int delete_reg(const Register *reg){
 		return ret;
 
 	if(lseek(fd, -sizeof(FileRegister), SEEK_CUR) == -1){
-		printf("Error :: lseek(fd=%d, -sizeof(FileRegister)=%d, SEEK_CUR) :: errno %d '%s'\n", fd, -sizeof(FileRegister), errno, strerror(errno));
+		printf("Error :: %s :: lseek(fd=%d, -sizeof(FileRegister)=%d, SEEK_CUR) :: errno %d '%s'\n", __func__, fd, -sizeof(FileRegister), errno, strerror(errno));
 		return -1;
 	}
 
 	file_reg.valid = 0;
 
 	if(write(fd, &file_reg, sizeof(FileRegister)) != sizeof(FileRegister)){
-		printf("Error :: write(fd=%d, &file_reg=%p, sizeof(FileRegister)=%d) != sizeof(FileRegister) :: errno %d '%s'\n", fd, &file_reg, sizeof(FileRegister), errno, strerror(errno));
+		printf("Error :: %s :: write(fd=%d, &file_reg=%p, sizeof(FileRegister)=%d) != sizeof(FileRegister) :: errno %d '%s'\n", __func__, fd, &file_reg, sizeof(FileRegister), errno, strerror(errno));
 		return -1;
 	}
 
@@ -118,7 +149,7 @@ int select_reg(Register *reg){
 			return ret;
 
 	if(lseek(fd, 0, SEEK_SET) == -1){
-		printf("Error :: lseek(fd=%d, 0, SEEK_SET) :: errno %d '%s'\n", fd, errno, strerror(errno));
+		printf("Error :: %s :: lseek(fd=%d, 0, SEEK_SET) :: errno %d '%s'\n", __func__, fd, errno, strerror(errno));
 		return -1;
 	}
 
@@ -138,15 +169,15 @@ void end_program(int sig __attribute__ ((unused))){
 }
 
 int main(int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused))){
-	key_t key = ftok("bin/server", 'a');
+	key_t key = ftok(FTOK_FILE, FTOK_CHAR);
 	if(key == -1){
-		printf("Error :: ftok(\"bin/server\", 'a') :: errno %d %s\n", errno, strerror(errno));
+		printf("Error :: %s :: ftok(\"%s\", '%c') :: errno %d %s\n", __func__, FTOK_FILE, FTOK_CHAR, errno, strerror(errno));
 		return -1;
 	}
 
 	int msgid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
 	if(msgid == -1){
-		printf("Error :: msgget(key=%d, IPC_CREAT | IPC_EXCL | 0666) :: errno %d %s\n", key, errno, strerror(errno));
+		printf("Error :: %s :: msgget(key=%d, IPC_CREAT | IPC_EXCL | 0666) :: errno %d %s\n", __func__, key, errno, strerror(errno));
 		return -1;
 	}
 
@@ -159,37 +190,55 @@ int main(int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused)
 	MsgStruct msg;
 	int ret;
 
+	printf("Server running msgid: %d\n", msgid);
 	while(running && msgrcv(msgid, &msg, sizeof(MsgData), SERVER_MSGTYP, 0) != -1){
 		switch(msg.data.type){
 			case INSERT:
 				printf("[INFO] :: INSERT (%d) :  pid: %d nombre: '%s' direcccion: '%s' telefono: '%s'\n", msg.data.type, msg.data.pid, msg.data.reg.nombre, msg.data.reg.direccion, msg.data.reg.telefono);
-				if((ret = insert_reg(&msg.data.reg)))
-					printf("Error :: insert_reg() -> %d\n", ret);
+				msg.data.type = SUCCESS;
+				if((ret = insert_reg(&msg.data.reg))){
+					msg.data.type = ERROR;
+					printf("Error :: %s :: insert_reg() -> %d\n", __func__, ret);
+				}
 				break;
 
 			case SELECT:
 				printf("[INFO] :: SELECT (%d) :  pid: %d nombre: '%s'\n", msg.data.type, msg.data.pid, msg.data.reg.nombre);
-				if((ret = select_reg(&msg.data.reg)))
-					printf("Error :: select_reg() -> %d\n", ret);
+				if((ret = select_reg(&msg.data.reg))){
+					msg.data.type = ERROR;
+					printf("Error :: %s :: select_reg() -> %d\n", __func__, ret);
+				}
+				break;
 
-				msg.mtype = msg.data.pid;
-				if(msgsnd(msgid, &msg, sizeof(MsgData), 0) == -1)
-					printf("Error :: msgsnd(msgid=%d, &msg, sizeof(MsgData)=%d, 0) :: errno %d '%s'\n", msgid, sizeof(MsgData), errno, strerror(errno));
+			case UPDATE:
+				printf("[INFO] :: UPDATE (%d) :  pid: %d nombre: '%s' direcccion: '%s' telefono: '%s'\n", msg.data.type, msg.data.pid, msg.data.reg.nombre, msg.data.reg.direccion, msg.data.reg.telefono);
+				msg.data.type = SUCCESS;
+				if((ret = update_reg(&msg.data.reg))){
+					msg.data.type = ERROR;
+					printf("Error :: %s :: update_reg() -> %d\n", __func__, ret);
+				}
 				break;
 
 			case DELETE:
 				printf("[INFO] :: DELETE (%d) :  pid: %d nombre: '%s'\n", msg.data.type, msg.data.pid, msg.data.reg.nombre);
-				if((ret = delete_reg(&msg.data.reg)))
-					printf("Error :: delete_reg() -> %d\n", ret);
+				msg.data.type = SUCCESS;
+				if((ret = delete_reg(&msg.data.reg))){
+					msg.data.type = ERROR;
+					printf("Error :: %s :: delete_reg() -> %d\n", __func__, ret);
+				}
 				break;
 
 			default:
 				break;
 		}
+
+		msg.mtype = msg.data.pid;
+		if(msgsnd(msgid, &msg, sizeof(MsgData), 0) == -1)
+			printf("Error :: %s :: msgsnd(msgid=%d, &msg, sizeof(MsgData)=%d, 0) :: errno %d '%s'\n", __func__, msgid, sizeof(MsgData), errno, strerror(errno));
 	}
 
 	if(msgctl(msgid, IPC_RMID, NULL) == -1){
-		printf("Error ::  msgctl(msgid=%d, IPC_RMID, NULL) :: errno %d '%s'\n", msgid, errno, strerror(errno));
+		printf("Error :: %s :: msgctl(msgid=%d, IPC_RMID, NULL) :: errno %d '%s'\n", __func__, msgid, errno, strerror(errno));
 	}
 
 	close_file();
