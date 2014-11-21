@@ -189,7 +189,7 @@ int main(int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused)
 	}
 
 	if(msgctl(msgid, IPC_RMID, NULL) == -1){
-		printf("error borrando cola\n");
+		printf("Error ::  msgctl(msgid=%d, IPC_RMID, NULL) :: errno %d '%s'\n", msgid, errno, strerror(errno));
 	}
 
 	close_file();
