@@ -1,5 +1,5 @@
-CC=g++
-LD=g++
+CC=gcc
+LD=gcc
 GDWARF=-gdwarf-2
 RM=rm
 MKDIR=mkdir
@@ -9,12 +9,12 @@ BIN=server client
 BINS=$(addprefix $(BIN_PATH)/, $(BIN))
 OBJECTS=$(foreach b, $(BIN), $(SRC_PATH)/$(b)/main.o)
 
-UTIL_CPP ?= $(wildcard $(SRC_PATH)/util/*.cpp)
-UTIL=$(patsubst %.cpp, %.o, $(UTIL_CPP))
+UTIL_CPP ?= $(wildcard $(SRC_PATH)/util/*.c)
+UTIL=$(patsubst %.c, %.o, $(UTIL_CPP))
 
 SRC_PATH=./src/
 
-CFLAGS=-Wall -std=c++11 -Wextra -g
+CFLAGS=-Wall -Wextra -g
 LDFLAGS=
 
 .PHONY: all
@@ -33,5 +33,5 @@ clean:
 	- $(RM) $(SRC_PATH)/*/*.o
 	- $(RM) -r $(BIN_PATH)
 
-%.o: %.cpp
+%.o: %.c
 	$(CC) -c $(CFLAGS) -o "$@" "$<"
