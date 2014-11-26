@@ -86,17 +86,27 @@ int parse_cmd(int argc, char *argv[], MsgType *type, Register *reg, int *msgid){
 		return -1;
 	}
 
+	#define CONTROL_AND_COPY(X)\
+	if(sizeof(reg->X) <= strlen(argv[optind])){\
+		printf("Error :: \"" #X "\" mas largo que lo permitido. Max: %d, Largo: %d\n", sizeof(reg->X) -1, strlen(argv[optind]));\
+		return -1;\
+	}\
+	strcpy(reg->X, argv[optind++])
+
+	CONTROL_AND_COPY(nombre);
+
 	switch(*type){
 		case UPDATE:
 		case INSERT:
-			strcpy(reg->nombre, argv[optind]);
-			strcpy(reg->direccion, argv[optind+1]);
-			strcpy(reg->telefono, argv[optind+2]);
+			CONTROL_AND_COPY(direccion);
+			CONTROL_AND_COPY(telefono);
 			break;
 		default:
-			strcpy(reg->nombre, argv[optind]);
+
 			break;
 	}
+
+	#undef CONTROL_AND_COPY
 
 	return 0;
 }
